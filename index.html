@@ -1282,8 +1282,8 @@ function win2_(w,from,t,mo,first,dw){
  const noCpuTulip=!!(G.opt.rep&&G.fev[w]&&!G.hum[w]);
  if(ri&&G.wall.length&&!noCpuTulip){
   // チューリップは実際に残っているG.wallから、その時点の山順でめくる。
-  // 手牌・河・抜きドラ等から仮想の牌を生成したり、ランダム抽出したりしない。
-  const tgtTiles=h.concat(G.nuki[w]);
+  // 手牌・副露（暗槓を含む）・抜きドラを対象にし、河等から仮想の牌を生成したりランダム抽出したりしない。
+  const tgtTiles=h.concat(G.nuki[w], ...G.kan[w].map(k=>k.slice(0,4)), ...G.pon[w].map(ptl));
   const cntT=tl=>{const v=tl&31;return tgtTiles.filter(x=>tulipTargets(x&31).includes(v)).length};
   ud=!!(G.opt.tud&&oddAnko(w,c,wt,!ron));
   if(ud){
