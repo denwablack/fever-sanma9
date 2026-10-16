@@ -297,6 +297,71 @@ table.sc th{color:#8fb3c6;font-weight:400}table.sc td:first-child,table.sc th:fi
 .callfx.sm{font-size:min(15vh,72px);animation:callsm .65s ease-out both}
 
 /* 逆ポッチ：絞り演出→伏せ牌をクリックして回転公開 */
+
+.yakumanReveal{position:fixed;inset:0;z-index:10000;overflow:hidden;background:#000;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;animation:yrFade .25s ease-out both,yrShake .55s .1s linear both}
+.yakumanReveal>div{position:absolute}
+.yakumanReveal .yr-shade{inset:0;background:radial-gradient(ellipse at 50% 46%,#6a0b46 0%,#240a47 30%,#070a1f 68%,#000 100%);animation:yrHue 5s linear infinite}
+.yakumanReveal .yr-rainbow{inset:-60%;background:repeating-conic-gradient(from 0deg at 50% 50%,#ff2b2b77 0 12deg,#0000 12deg 24deg,#ffe60077 24deg 36deg,#0000 36deg 48deg,#27e04a77 48deg 60deg,#0000 60deg 72deg,#17c9ff77 72deg 84deg,#0000 84deg 96deg,#c43bff77 96deg 108deg,#0000 108deg 120deg);-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 0,#000 22%,transparent 62%);mask-image:radial-gradient(circle at 50% 50%,#000 0,#000 22%,transparent 62%);animation:yrSpin 14s linear infinite}
+.yakumanReveal .yr-speed{inset:-60%;background:repeating-conic-gradient(from 0deg at 50% 50%,#fff0 0 2.6deg,#ffffffd9 2.8deg 3.1deg,#fff0 3.3deg 6.2deg,#ffffff99 6.4deg 6.6deg,#fff0 6.8deg 9deg);-webkit-mask-image:radial-gradient(circle at 50% 50%,transparent 0,transparent 20%,#000 58%);mask-image:radial-gradient(circle at 50% 50%,transparent 0,transparent 20%,#000 58%);animation:yrJit .14s steps(2) infinite,yrPulseO 1s ease-in-out infinite}
+.yakumanReveal .yr-sparks{inset:0;pointer-events:none}
+.yakumanReveal .yr-sparks i{position:absolute;left:50%;top:50%;width:var(--s);height:var(--s);margin:-4px;border-radius:50%;background:hsl(var(--h),100%,66%);box-shadow:0 0 8px hsl(var(--h),100%,66%);opacity:0;animation:yrSpk var(--du) var(--dl) ease-out infinite}
+.yakumanReveal .yr-band{left:-10%;width:120%;height:max(34px,5.2vh);background:repeating-linear-gradient(115deg,#ff2b2b 0 26px,#ffe600 26px 52px,#27e04a 52px 78px,#17c9ff 78px 104px,#c43bff 104px 130px);box-shadow:0 0 16px #fffa,0 0 34px #ff5ad9aa;border-top:3px solid #fff;border-bottom:3px solid #fff}
+.yakumanReveal .yr-band-t{top:4%;transform:skewY(-4deg);animation:yrBandL .5s cubic-bezier(.2,.9,.2,1) both,yrBandMove 1.4s linear infinite}
+.yakumanReveal .yr-band-b{bottom:4%;transform:skewY(-4deg);animation:yrBandR .5s .1s cubic-bezier(.2,.9,.2,1) both,yrBandMove 1.4s linear infinite reverse}
+.yakumanReveal .yr-stack{left:2vw;right:2vw;top:50%;display:flex;flex-direction:column;align-items:center;gap:.1em;transform:translateY(-68%)}
+.yakumanReveal .rb{position:relative;display:block;max-width:100%;text-align:center;font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans','Yu Gothic','Noto Sans JP',Impact,sans-serif;font-weight:900;line-height:1.12;letter-spacing:.03em;overflow-wrap:anywhere}
+.yakumanReveal .rb>span{display:block}
+.yakumanReveal .rb .y{display:inline-block}
+.yakumanReveal .rb .o1,.yakumanReveal .rb .o2{position:absolute;left:0;right:0;top:0;pointer-events:none}
+.yakumanReveal .rb .o1{color:#14031f;-webkit-text-stroke:.19em #14031f;stroke-linejoin:round;text-shadow:0 .07em 0 #000,0 .12em .22em #000b}
+.yakumanReveal .rb .o2{color:#fff;-webkit-text-stroke:.09em #fff;stroke-linejoin:round}
+.yakumanReveal .rb .f{position:relative;color:transparent;-webkit-text-fill-color:transparent;background:linear-gradient(90deg,#ff2b2b,#ff9d00,#fff200,#27e04a,#17c9ff,#3d5bff,#c43bff,#ff2b2b,#ff9d00,#fff200,#27e04a,#17c9ff,#3d5bff,#c43bff,#ff2b2b);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;animation:yrRb 1.5s linear infinite,yrGlow .9s ease-in-out infinite alternate}
+.yakumanReveal .yr-top{font-size:clamp(26px,8vw,54px);letter-spacing:.3em;animation:yrTop .5s .15s ease-out both}
+.yakumanReveal .yr-title{font-size:clamp(46px,15vw,104px);animation:yrSlam .75s .25s cubic-bezier(.2,.8,.2,1) both}
+.yakumanReveal .yr-title.m{font-size:clamp(34px,10.5vw,76px)}
+.yakumanReveal .yr-hand{left:2vw;right:2vw;bottom:21%;display:flex;justify-content:center;align-items:flex-end;gap:2px;flex-wrap:nowrap}
+.yakumanReveal .yr-hand .t{--w:min(6.1vw,43px);height:calc(var(--w)*1.38);animation:yrTile .5s calc(.6s + var(--i,0)*.045s) cubic-bezier(.2,.9,.3,1.4) both,yrTileGlow 1.4s calc(var(--i,0)*-.1s) linear infinite}
+.yakumanReveal .yr-caption{left:0;right:0;bottom:11.5%;font-size:clamp(28px,8vw,48px);letter-spacing:.35em;animation:yrCap .4s 1s cubic-bezier(.2,.9,.3,1.3) both}
+.yakumanReveal .yr-flash{inset:0;background:#fff;pointer-events:none;animation:yrFlash .8s ease-out both}
+@keyframes yrFade{from{opacity:0}to{opacity:1}}
+@keyframes yrShake{0%,100%{transform:translate(0,0)}10%{transform:translate(-9px,5px)}20%{transform:translate(8px,-6px)}30%{transform:translate(-7px,-4px)}40%{transform:translate(6px,6px)}50%{transform:translate(-5px,3px)}60%{transform:translate(4px,-3px)}75%{transform:translate(-2px,2px)}}
+@keyframes yrHue{to{filter:hue-rotate(360deg)}}
+@keyframes yrSpin{to{transform:rotate(360deg)}}
+@keyframes yrJit{from{transform:rotate(0)}to{transform:rotate(2.5deg)}}
+@keyframes yrPulseO{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes yrSpk{0%{opacity:0;transform:translate(0,0) scale(.4)}12%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) scale(1.15)}}
+@keyframes yrBandL{from{transform:translateX(-110%) skewY(-4deg)}to{transform:translateX(0) skewY(-4deg)}}
+@keyframes yrBandR{from{transform:translateX(110%) skewY(-4deg)}to{transform:translateX(0) skewY(-4deg)}}
+@keyframes yrBandMove{to{background-position:130px 0}}
+@keyframes yrRb{to{background-position:100% 0}}
+@keyframes yrGlow{from{filter:drop-shadow(0 0 5px #ffffffcc)}to{filter:drop-shadow(0 0 20px #fff) drop-shadow(0 0 34px #ff7bf2)}}
+@keyframes yrTop{from{opacity:0;letter-spacing:1em;transform:translateY(-24px)}to{opacity:1;letter-spacing:.3em;transform:translateY(0)}}
+@keyframes yrSlam{0%{opacity:0;transform:scale(3.6);filter:blur(10px)}55%{opacity:1;transform:scale(.88);filter:blur(0)}75%{transform:scale(1.07)}100%{opacity:1;transform:scale(1)}}
+@keyframes yrCap{from{opacity:0;transform:scale(2.2)}to{opacity:1;transform:scale(1)}}
+@keyframes yrTile{from{opacity:0;transform:translateY(60px) scale(.5) rotate(-12deg)}to{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
+@keyframes yrTileGlow{0%,100%{box-shadow:0 0 0 2px #ff3b3b,0 0 12px 2px #ff3b3b,0 3px 0 #222}17%{box-shadow:0 0 0 2px #ffb300,0 0 12px 2px #ffb300,0 3px 0 #222}34%{box-shadow:0 0 0 2px #f4ff3b,0 0 12px 2px #f4ff3b,0 3px 0 #222}50%{box-shadow:0 0 0 2px #35e86a,0 0 12px 2px #35e86a,0 3px 0 #222}67%{box-shadow:0 0 0 2px #25c8ff,0 0 12px 2px #25c8ff,0 3px 0 #222}84%{box-shadow:0 0 0 2px #b04bff,0 0 12px 2px #b04bff,0 3px 0 #222}}
+@keyframes yrFlash{0%{opacity:1}100%{opacity:0}}
+/* ダブルフィーバー：プチュン→暗転フリーズ→レインボーカットイン */
+.dfx{position:fixed;inset:0;z-index:9500;pointer-events:none;overflow:hidden}
+.dfx-b{position:absolute;left:0;right:0;height:50.6%;background:#000}
+.dfx-bt{top:0;transform:translateY(-100%);animation:dfBarT .16s cubic-bezier(.6,0,1,1) forwards,dfOff .08s 1.7s forwards}
+.dfx-bb{bottom:0;transform:translateY(100%);animation:dfBarB .16s cubic-bezier(.6,0,1,1) forwards,dfOff .08s 1.7s forwards}
+.dfx-line{position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;background:#fff;box-shadow:0 0 14px 3px #fff,0 0 44px 9px #8fc8ff;opacity:0;animation:dfLine .5s .16s ease-in forwards}
+.yakumanReveal.dfcut{animation:dfCut 3.3s 1.7s linear both}
+.yakumanReveal.dfcut .yr-stack{top:50%;transform:translateY(-52%)}
+.yakumanReveal.dfcut .yr-top{font-size:clamp(26px,10vw,66px);letter-spacing:.04em;white-space:nowrap;animation:dfTop .5s 1.85s ease-out both}
+.yakumanReveal.dfcut .yr-title{font-size:clamp(70px,27vw,170px);animation-delay:1.95s}
+.yakumanReveal.dfcut .yr-title.s{font-size:clamp(40px,14.2vw,98px);white-space:nowrap}
+.yakumanReveal.dfcut .yr-band-t{animation-delay:1.7s,1.7s}
+.yakumanReveal.dfcut .yr-band-b{animation-delay:1.8s,1.7s}
+.yakumanReveal.dfcut .yr-flash{opacity:0;animation:yrFlash .8s 1.7s ease-out forwards}
+@keyframes dfTop{from{opacity:0;letter-spacing:.5em;transform:translateY(-24px)}to{opacity:1;letter-spacing:.04em;transform:translateY(0)}}
+@keyframes dfBarT{to{transform:translateY(0)}}
+@keyframes dfBarB{to{transform:translateY(0)}}
+@keyframes dfOff{to{opacity:0}}
+@keyframes dfLine{0%{opacity:1;transform:scaleX(1) scaleY(1)}70%{opacity:1;transform:scaleX(.02) scaleY(1.7)}100%{opacity:0;transform:scaleX(.01) scaleY(1)}}
+@keyframes dfCut{0%{opacity:0;transform:translate(0,0)}1%{opacity:1}5%{transform:translate(-10px,6px)}9%{transform:translate(9px,-7px)}13%{transform:translate(-7px,-4px)}17%{transform:translate(5px,5px)}22%{transform:translate(0,0)}88%{opacity:1}100%{opacity:0}}
+
 .pocchiReveal{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#050505;pointer-events:auto;animation:pocchiFade .35s ease-out both}
 .pocchiReveal .pr-shade{position:absolute;inset:0;background:radial-gradient(circle at 50% 48%,#333 0%,#111 38%,#000 72%);animation:prSqueeze 1.35s ease-in-out both;pointer-events:none}
 .pocchiReveal .pr-ring{position:absolute;width:min(72vw,520px);height:min(72vw,520px);border:4px solid #777;border-radius:50%;box-shadow:0 0 0 2px #111,0 0 45px #fff3;animation:prRing 1.35s ease-in-out both;pointer-events:none}
@@ -558,6 +623,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)unlockAudi
 const tn=(a,f,t,d,ty,v,f2)=>{const o=a.createOscillator(),g=a.createGain();o.type=ty||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v||.15,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.02)};
 const nz=(a,t,d,v,hp)=>{const n=a.sampleRate*d|0,b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=(Math.random()*2-1)*(1-i/n);const s=a.createBufferSource();s.buffer=b;const f=a.createBiquadFilter();f.type='highpass';f.frequency.value=hp||1500;const g=a.createGain();g.gain.value=v||.2;s.connect(f);f.connect(g);g.connect(a.destination);s.start(t)};
 const SFX={
+ puchun:(a,t)=>{nz(a,t,.05,.45,3500);tn(a,2200,t,.16,'sine',.32,48);tn(a,95,t+.02,.28,'sine',.4,36)},
  tile:(a,t)=>{nz(a,t,.04,.25,1200);tn(a,180,t,.06,'triangle',.18,90)},
  riichi:(a,t)=>{tn(a,523,t,.12,'square',.09);tn(a,784,t+.1,.12,'square',.09);tn(a,1047,t+.2,.35,'square',.09);tn(a,1568,t+.2,.4,'sine',.07)},
  shugi:(a,t)=>{[0,1,2,3].forEach(k=>{const x=t+k*.19,b=900+k*180;tn(a,b,x,.16,'sawtooth',.09,b*3.6);tn(a,b*2,x,.16,'sine',.1,b*7);tn(a,b*1.5,x,.16,'square',.04,b*5);nz(a,x+.08,.06,.06,7000)});tn(a,3200,t+.8,.5,'sine',.08,6500);nz(a,t+.8,.3,.08,7000)},
@@ -844,7 +910,7 @@ function render(a){
   <div class="cluster bottom"><div class="name3">${pl(p0)}</div>${G.rii[p0]?'<div class="riichiRod" title="リーチ棒"></div>':''}${riv(p0,'bottom')}</div>
  </div></div>
  ${riiWaitHtml(p0,ok)}<div class="hrow"><div class="hand">${G.h[p0].map((t,i)=>{const last=i==G.last&&G.turn==p0,k2=t>>5,mine=G.stage=='me'&&G.act==p0;const k=(PEND&&!ok.includes(i))||(G.rii[p0]&&!last&&mine)?'dim':(PEND?'ok':'');return `<span class="t ${cl(t)} ${['','rd','gd','pt','pt'][k2]} ${k2==3?'pocchi-normal':k2==4?'pocchi-reverse':''} ${k} ${DISCSEL===i?'sel':''} ${last?'gap':''}" onclick="U('disc',${i})">${tileFace(t)}</span>`}).join('')}</div></div>
- <div class="cm cml">${meldsHtml(pL,'top')}</div><div class="cm cmr">${meldsHtml(pR,'right')}</div><div class="acts"><div class="cm cmo">${meldsHtml(p0)}</div><div class="abtns">${a||''}</div></div><div class="toast" ${log.trim()?'':'style="display:none"'}>${log}</div>${resHtml()}${(()=>{if(!G.callTxt)return '';const cd=G.callSm?650:(G.callBig?5200:0),el=cd&&G.callAt?Date.now()-G.callAt:0;if(cd&&G.callAt&&el>cd)return '';const st=[];if(cd&&G.callAt)st.push('animation-delay:-'+(el/1000).toFixed(2)+'s');if(G.callBig){const n=Array.from(G.callTxt).length;st.push('font-size:min(34vh,160px,calc(86vw/'+n+'))')}const feverTxt=G.callTxt=='フィーバーリーチ';const feverShuTxt=G.callTxt=='フィーバーシュバリーチ！';const shugiTxt=G.callTxt=='祝儀倍リーチ';if(G.callBig&&(feverTxt||feverShuTxt||shugiTxt)){const n=Array.from(G.callTxt).length;st.push('font-size:'+(feverTxt||feverShuTxt?'min(22vh,120px,calc(88vw/'+n+'))':'min(14vh,76px,calc(88vw/'+n+'))'))}const callText=feverShuTxt?'フィーバー\nシュバリーチ':G.callTxt;return `<div class="callfx${G.callSm?' sm':''}${feverTxt?' feverRainbow':''}${feverShuTxt?' feverShuRainbow':''}${shugiTxt?' shugiRed':''}${feverTxt?' feverCut':''}"${st.length?` style="${st.join(';')}"`:''}>${callText}${G.callDub&&G.callTxt==='ロン'?'<span class="callDubTag">ダブロン！</span>':''}</div>`})()}</div>`;
+ <div class="cm cml">${meldsHtml(pL,'top')}</div><div class="cm cmr">${meldsHtml(pR,'right')}</div><div class="acts"><div class="cm cmo">${meldsHtml(p0)}</div><div class="abtns">${a||''}</div></div><div class="toast" ${log.trim()?'':'style="display:none"'}>${log}</div>${resHtml()}${(()=>{if(!G.callTxt){DFX_KEY='';return ''}if(/^ダブルフィーバー/.test(G.callTxt)){dfxEnsure(G.callTxt);return ''}const cd=G.callSm?650:(G.callBig?5200:0),el=cd&&G.callAt?Date.now()-G.callAt:0;if(cd&&G.callAt&&el>cd)return '';const st=[];if(cd&&G.callAt)st.push('animation-delay:-'+(el/1000).toFixed(2)+'s');if(G.callBig){const n=Array.from(G.callTxt).length;st.push('font-size:min(34vh,160px,calc(86vw/'+n+'))')}const feverTxt=G.callTxt=='フィーバーリーチ';const feverShuTxt=G.callTxt=='フィーバーシュバリーチ！';const shugiTxt=G.callTxt=='祝儀倍リーチ';if(G.callBig&&(feverTxt||feverShuTxt||shugiTxt)){const n=Array.from(G.callTxt).length;st.push('font-size:'+(feverTxt||feverShuTxt?'min(22vh,120px,calc(88vw/'+n+'))':'min(14vh,76px,calc(88vw/'+n+'))'))}const callText=feverShuTxt?'フィーバー\nシュバリーチ':G.callTxt;return `<div class="callfx${G.callSm?' sm':''}${feverTxt?' feverRainbow':''}${feverShuTxt?' feverShuRainbow':''}${shugiTxt?' shugiRed':''}${feverTxt?' feverCut':''}"${st.length?` style="${st.join(';')}"`:''}>${callText}${G.callDub&&G.callTxt==='ロン'?'<span class="callDubTag">ダブロン！</span>':''}</div>`})()}</div>`;
  if(ROLE=='host')bcast()}
 function snap(s){return{pts:G.pts,chips:G.chips,dealer:G.dealer,hn:G.hn,mord:G.mord,callTxt:G.callTxt,callSm:G.callSm,callBig:G.callBig,pot:G.pot,honba:G.honba,riiIdx:G.riiIdx,ind:G.ind,nuki:G.nuki,disc:G.disc,away:G.away,rii:G.rii,dri:G.dri,fev:G.fev,dbl:G.dbl,used:G.used,kan:G.kan,pon:G.pon,turn:G.turn,stage:G.stage,act:G.act,last:G.last,called:G.called,wl:G.wall.length,opt:G.opt,hum:G.hum,names:G.names,over:G.over,h:G.h.map((h,p)=>p==s?h:h.map(()=>0))}}
 const encM=x=>String(x||'').split('<hr>').slice(-2).join('<hr>').replace(/<span class="t [^"]*" data-t="(\d+)"[^>]*>.*?<\/span>/g,'⟦$1⟧');
@@ -1031,16 +1097,45 @@ function pocchiReveal(reverse,done){
  },{once:true});
 }
 
+let DFX_KEY='';
+function dfxEnsure(txt){
+ const key=txt+':'+(G.callTok||G.callAt||0);if(DFX_KEY===key)return;DFX_KEY=key;
+ const prior=document.querySelector('.dfx');if(prior)prior.remove();
+ const shu=/シュバ/.test(txt);
+ const rb=(t,c)=>`<div class="rb ${c}"><span class="o1">${t}</span><span class="o2">${t}</span><span class="f">${t}</span></div>`;
+ let sp='';for(let i=0;i<40;i++){const a=Math.random()*Math.PI*2,d=28+Math.random()*60;sp+=`<i style="--x:${(Math.cos(a)*d).toFixed(1)}vmax;--y:${(Math.sin(a)*d).toFixed(1)}vmax;--s:${(4+Math.random()*9).toFixed(1)}px;--dl:${(1.7+Math.random()*1.4).toFixed(2)}s;--du:${(1.5+Math.random()*1.8).toFixed(2)}s;--h:${Math.floor(Math.random()*360)}"></i>`}
+ const root=document.createElement('div');root.className='dfx';
+ root.innerHTML=`<div class="yakumanReveal dfcut"><div class="yr-shade"></div><div class="yr-rainbow"></div><div class="yr-speed"></div><div class="yr-sparks">${sp}</div><div class="yr-band yr-band-t"></div><div class="yr-band yr-band-b"></div><div class="yr-stack">${rb('ダブルフィーバー','yr-top')}${rb(shu?'シュバリーチ':'リーチ',shu?'yr-title s':'yr-title')}</div><div class="yr-flash"></div></div><div class="dfx-b dfx-bt"></div><div class="dfx-b dfx-bb"></div><div class="dfx-line"></div>`;
+ document.body.appendChild(root);
+ setTimeout(()=>{if(root.isConnected)root.remove()},5100);
+}
+function yakumanReveal(names,handHtml){
+ const prior=document.querySelector('.yakumanReveal');if(prior)prior.remove();
+ const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const rb=(t,c)=>`<div class="rb ${c}"><span class="o1">${t}</span><span class="o2">${t}</span><span class="f">${t}</span></div>`;
+ const title=names.map(n=>`<span class="y">${esc(n)}</span>`).join('・');
+ let sp='';for(let i=0;i<44;i++){const a=Math.random()*Math.PI*2,d=28+Math.random()*60;sp+=`<i style="--x:${(Math.cos(a)*d).toFixed(1)}vmax;--y:${(Math.sin(a)*d).toFixed(1)}vmax;--s:${(4+Math.random()*9).toFixed(1)}px;--dl:${(Math.random()*1.4).toFixed(2)}s;--du:${(1.5+Math.random()*1.8).toFixed(2)}s;--h:${Math.floor(Math.random()*360)}"></i>`}
+ const ov=document.createElement('div');ov.className='yakumanReveal';
+ ov.innerHTML=`<div class="yr-shade"></div><div class="yr-rainbow"></div><div class="yr-speed"></div><div class="yr-sparks">${sp}</div><div class="yr-band yr-band-t"></div><div class="yr-band yr-band-b"></div><div class="yr-stack">${rb('役 満','yr-top')}${rb(title,names.length>1?'yr-title m':'yr-title')}</div><div class="yr-hand">${handHtml}</div>${rb('和了','yr-caption').replace('<div class="rb','<div style="position:absolute" class="rb')}<div class="yr-flash"></div>`;
+ document.body.appendChild(ov);
+ ov.querySelectorAll('.yr-hand .t').forEach((t,i)=>t.style.setProperty('--i',i));
+ // 役満演出は白ポッチ音声のみ再生する。
+ const voice=document.getElementById('pocchiWhiteVoice');
+ if(voice){try{voice.pause();voice.currentTime=0;const playback=voice.play();if(playback&&playback.catch)playback.catch(()=>{});}catch(e){}}
+ const close=()=>{if(ov.isConnected)ov.remove()};ov.addEventListener('click',close);setTimeout(close,5200);
+}
+/* チップ倍率：祝儀倍(×2)とダブルフィーバー(×2)は掛け算。全チップ共通 */
+function chipMul(p){return (G.dbl[p]?2:1)*(G.fev[p]>=2?2:1)}
 function chance(p,rolls,why,payer,reverse=false){if(!G.chCut){G.chCut=1}
  let tx=`🎰サイコロチャンス！（${why}）${rolls>1?rolls+'回':''}`,tot=0,runs=[];
  for(let k=0;k<rolls;k++){const d=chin(reverse);tot+=d.chips;tx+=(rolls>1?`<br>【${k+1}回目】`:'')+d.text;runs.push({seq:d.seq,subtotal:d.chips})}
- const mul=G.dbl[p]?2:1,real=tot*mul;
+ const mul=chipMul(p),real=tot*mul;
  if(!DICE_DELTA)DICE_DELTA=[0,0,0];
  // サイコロチャンス分は通常チップと別計算のため、ここで祝儀倍を反映する。
  // DICE_DELTAはwin2_()内の通常チップ倍率 m() の対象外なので、realを加算する。
  if(payer!=null){DICE_DELTA[p]+=real;DICE_DELTA[payer]-=real}
  else [0,1,2].forEach(q=>{if(q!=p){DICE_DELTA[p]+=real;DICE_DELTA[q]-=real}});
- tx+=mul>1?`<br><b>💰祝儀倍適用 → 実質${real>0?'+':''}${real}枚</b>`:'';
+ tx+=mul>1?`<br><b>×${mul}適用${G.dbl[p]?'（💰祝儀倍）':''}${G.fev[p]>=2?'（🎰ダブルフィーバー）':''} → 実質${real>0?'+':''}${real}枚</b>`:'';
  G.dmsg=(G.dmsg?G.dmsg+'<hr>':'')+tx;
  (G.diceLog=G.diceLog||[]).push({why,rolls:runs,tot,real,mul});
  G.slow=1}
@@ -1052,14 +1147,16 @@ function declareRii(p,i,m,allowFever=true,doubleRiichi=false){const special=(m||
  if(G.fev[p]){const wr=waits(r,p),lf=Array(27).fill(0);G.wall.forEach(x=>lf[x&31]++);
   if(wr.length>0&&wr.every(t=>lf[t]<=0)&&feverPocchiLeft()<=0)G.fevZero[p]=1}
  if(m&&G.fev[p]){
-  bigCall('フィーバーシュバリーチ！');snd('lightning');
-  playClip('fevshugi',()=>playClip('fevsfx',releaseSpecialRii));
+  if(G.fev[p]>=2){/* ダブルフィーバー：プチュン→暗転フリーズ→カットイン後に音声 */bigCall('ダブルフィーバーシュバリーチ！');snd('puchun');setTimeout(()=>{snd('lightning');playClip('fevshugi',()=>playClip('fevsfx',releaseSpecialRii))},1700)}
+  else{bigCall('フィーバーシュバリーチ！');snd('lightning');
+  playClip('fevshugi',()=>playClip('fevsfx',releaseSpecialRii))}
  }else if(m){
   bigCall('祝儀倍リーチ');playClip('shugivoice',()=>playClip('shugisfx',releaseSpecialRii));
  }else if(G.fev[p]){
-  bigCall('フィーバーリーチ');snd('lightning');playClip('fever',()=>playClip('fevsfx',releaseSpecialRii));
+  if(G.fev[p]>=2){bigCall('ダブルフィーバーリーチ');snd('puchun');setTimeout(()=>{snd('lightning');playClip('fever',()=>playClip('fevsfx',releaseSpecialRii))},1700)}
+  else{bigCall('フィーバーリーチ');snd('lightning');playClip('fever',()=>playClip('fevsfx',releaseSpecialRii))}
  }else{bigCall('リーチ');playClip('riichi')};
- msg=`${G.names[p]}: ${m?'💰祝儀倍 ':''}${G.fev[p]?'🎰フィーバーリーチ！（和了時にサイコロチャンス・敵は強制ツモ切り）':'リーチ！'}`}
+ msg=`${G.names[p]}: ${m?'💰祝儀倍 ':''}${G.fev[p]?'🎰'+(G.fev[p]>=2?'ダブル':'')+'フィーバーリーチ！（和了時にサイコロチャンス・敵は強制ツモ切り）':'リーチ！'}`}
 function doDisc(p,i){kifDisc(p,i);snd('tile');G.rin=-1;if(!G.rii[p])G.mf[p]=0;if(G.ipp[p]==2)G.ipp[p]=0;else if(G.ipp[p]==1)G.ipp[p]=2;
  const t=G.h[p][i];G.h[p].splice(i,1);G.h[p].sort(st);
  // フィーバー中に自分の上がり牌を切った場合は河へ入れず、左側へ退避。
@@ -1112,7 +1209,7 @@ function doPon(q,p,t){const b=t&31,h=G.h[q],m=[t];for(let i=h.length-1;i>=0&&m.l
 function doDkan(q,p,t){const b=t&31,h=G.h[q],k=[t];for(let i=h.length-1;i>=0&&k.length<4;i--)if((h[i]&31)==b)k.push(...h.splice(i,1));k.push((p-q+3)%3);G.kan[q].push(k);G.mord[q].push('k');G.disc[p].pop();G.called=true;G.firstInterrupted=true;G.ipp=[0,0,0];snd('kan');smCall('カン','カン！');G.ind.push(G.wall.pop());G.ura.push(G.wall.pop());h.sort(st);h.push(G.wall.pop());G.last=h.length-1;G.rin=q;G.turn=q;kifRec({t:'kan',p:q,tile:b});msg=`${G.names[q]}が大明槓（${N[b]}）新ドラ表示`;if(G.hum[q]){G.stage='me';G.act=q;draw()}else{render('');setTimeout(()=>cpuTurn(q),700)}}
 function seenCnt(hand){const c=Array(27).fill(0),add=t=>{c[t&31]++};
  hand.forEach(add);G.ind.forEach(add);G.ura.forEach(add);
- for(let q=0;q<3;q++){G.disc[q].forEach(add);G.nuki[q].forEach(add);G.pon[q].forEach(k=>ptl(k).forEach(add));G.kan[q].forEach(k=>k.forEach(add))}
+ for(let q=0;q<3;q++){G.disc[q].forEach(add);G.nuki[q].forEach(add);G.pon[q].forEach(k=>ptl(k).forEach(add));G.kan[q].forEach(k=>k.slice(0,4).forEach(add))}
  return c}
 function outs(w,seen){return w.reduce((a,t)=>a+Math.max(0,4-seen[t]),0)}
 function liveOuts(p,i){return outs(waits(without(G.h[p],i)),seenCnt(G.h[p]))}
@@ -1159,7 +1256,7 @@ function yakuman(c,f,p,wt,ts){f=f||c;const r=[];
  for(const b of [2,11]){if(c.slice(b,b+9).reduce((a,x)=>a+x,0)==14&&c[b]>=3&&c[b+8]>=3&&c.slice(b+1,b+8).every(x=>x>=1))r.push('九蓮宝燈')}
  for(let i=0;i<27;i++)if(!(p!=null&&G.pon[p].length)&&c[i]==2&&(ts||(wt!=null&&i==(wt&31)))&&c.every((x,j)=>{const y=x-(j==i?2:0);return y==0||y==3})){r.push('四暗刻');break}
  return r}
-const fc=(p,c)=>{const f=c.slice();G.kan[p].forEach(k=>k.forEach(t=>f[t&31]++));G.pon[p].forEach(k=>ptl(k).forEach(t=>f[t&31]++));return f};
+const fc=(p,c)=>{const f=c.slice();G.kan[p].forEach(k=>k.slice(0,4).forEach(t=>f[t&31]++));G.pon[p].forEach(k=>ptl(k).forEach(t=>f[t&31]++));return f};
 function seqDecomp(c,i){while(i<27&&!c[i])i++;if(i>=27)return true;
  if(!((i>=2&&i<=8)||(i>=11&&i<=17)))return false;
  if(c[i+1]&&c[i+2]){c[i]--;c[i+1]--;c[i+2]--;const r=seqDecomp(c,i);c[i]++;c[i+1]++;c[i+2]++;if(r)return true}
@@ -1249,11 +1346,11 @@ function kan(p,t){const h=G.h[p],k=[];for(let i=h.length-1;i>=0;i--)if((h[i]&31)
  msg=`${G.names[p]}がカン（${N[t]}）新ドラ表示`;kifRec({t:'kan',p,tile:t})}
 function smCall(t,v){const k=G.callTok=(G.callTok||0)+1;G.callTxt=t;G.callSm=1;G.callBig=0;G.callAt=Date.now();voice(v);setTimeout(()=>{if(G.callTok==k){G.callTxt='';G.callSm=0}},650)}
 function dsCut(){try{const f=document.querySelector('.felt');if(!f)return;const e=document.createElement('div');e.className='callfx diceJackpot';e.textContent='サイコロチャンス！';f.appendChild(e);setTimeout(()=>e.remove(),1550)}catch(x){}}
-function bigCall(t){const k=G.callTok=(G.callTok||0)+1;G.callTxt=t;G.callSm=0;G.callBig=1;G.callAt=Date.now();const dur=(t=='フィーバーリーチ'||t=='フィーバーシュバリーチ！')?5000:3800;/* 特殊リーチは音声ロック中でも先にカットインを描画する */if(['祝儀倍リーチ','フィーバーリーチ','フィーバーシュバリーチ！'].includes(t)){try{render(btns())}catch(e){}}setTimeout(()=>{if(G.callTok==k){G.callTxt='';G.callBig=0;try{render(btns())}catch(e){}}},dur)}
+function bigCall(t){const k=G.callTok=(G.callTok||0)+1;G.callTxt=t;G.callSm=0;G.callBig=1;G.callAt=Date.now();const dur=(t=='フィーバーリーチ'||t=='フィーバーシュバリーチ！')?5000:/^ダブルフィーバー/.test(t)?5100:3800;/* 特殊リーチは音声ロック中でも先にカットインを描画する */if(['祝儀倍リーチ','フィーバーリーチ','フィーバーシュバリーチ！','ダブルフィーバーリーチ','ダブルフィーバーシュバリーチ！'].includes(t)){try{render(btns())}catch(e){}}setTimeout(()=>{if(G.callTok==k){G.callTxt='';G.callBig=0;try{render(btns())}catch(e){}}},dur)}
 function callFx(ron,fn){G.stage='wait';G.act=-1;
  setTimeout(()=>{document.body.classList.add('wintransition');G.callSm=0;G.callBig=0;G.callTxt=ron?'ロン':'ツモ';voice(ron?'ロン！':'ツモ！');render('');
   setTimeout(()=>{G.callTxt='';G.callDub=false;fn()},1500)},1000)}
-function wildScore(w,h,X){const c=cnt(h),kt=[].concat(...G.kan[w],...G.pon[w].map(ptl)),cf=cnt(h.concat(kt)),L=h.concat(kt);
+function wildScore(w,h,X){const c=cnt(h),kt=[].concat(...G.kan[w].map(k=>k.slice(0,4)),...G.pon[w].map(ptl)),cf=cnt(h.concat(kt)),L=h.concat(kt);
  const d=doraCount(w,cf,G.ind)+G.nuki[w].length,u=doraCount(w,cf,G.ura),rd=L.filter(x=>x>>5==1).length,gd=L.filter(x=>x>>5==2).length,ip=G.ipp[w]==2?1:0,fv=G.fev[w]?FEVER:0,rin=G.rin==w?1:0;
  const yk=yakuman(c,cf,w,X,1);if(nk(w)==4)yk.push('四槓子');const YH=yh(w,c,X,1);
  if(!yk.length&&YH.h==0&&!ip&&!rin&&!d&&!u&&!rd&&!gd&&!G.disc[w].some(x=>[0,1,23].includes(x&31)))yk.push('r');
@@ -1267,7 +1364,7 @@ function consumeTulipWall(indices){
 }
 function win_(w,from,t,mo,first,dw){if(mo)return win2_(w,from,t,mo,first,dw);callFx(from>=0,()=>win2_(w,from,t,mo,first,dw))}
 function win2_(w,from,t,mo,first,dw){
- const h=G.h[w].slice();if(from>=0)h.push(t);let wt=from>=0?t:G.h[w][G.last];let pochT=null;if(G.wild===w&&from<0){const bw=bestWild(w);if(bw!=null){pochT=wt;h[G.last]=bw;wt=bw}}G.wild=-1;const c=cnt(h),kt=[].concat(...G.kan[w],...G.pon[w].map(ptl)),cf=cnt(h.concat(kt)),ron=from>=0,nm=G.names;
+ const h=G.h[w].slice();if(from>=0)h.push(t);let wt=from>=0?t:G.h[w][G.last];let pochT=null;if(G.wild===w&&from<0){const bw=bestWild(w);if(bw!=null){pochT=wt;h[G.last]=bw;wt=bw}}G.wild=-1;const c=cnt(h),kt=[].concat(...G.kan[w].map(k=>k.slice(0,4)),...G.pon[w].map(ptl)),cf=cnt(h.concat(kt)),ron=from>=0,nm=G.names;
  const d=doraCount(w,cf,G.ind)+G.nuki[w].length,u=G.rii[w]?doraCount(w,cf,G.ura):0;
  const rd=h.concat(kt).filter(x=>x>>5==1).length,gd=h.concat(kt).filter(x=>x>>5==2).length,ip=G.ipp[w]==2?1:0;
  const fv=G.fev[w]?FEVER+G.dice[w]:0;
@@ -1308,9 +1405,9 @@ function win2_(w,from,t,mo,first,dw){
   let b=yk.length?8000*yn:han>=13?8000:han>=11?6000:han>=8?4000:han>=6?3000:Math.min(2000,30*Math.pow(2,han+2));if(G.fev[w]>=2)b*=2;
  const dd=DICE_DELTA||[0,0,0];DICE_DELTA=null;
  const reversePoch=!!(!ron&&(G.revPochi===w || (G.rii[w] && wt!=null && (wt>>5)===4)));if(reversePoch)G.revPochi=-1;
- const hb=(G.honba||0)*1000,hbOn=mo?!!first:true,hv=hbOn?hb:0;const chg=[0,0,0],ch=(ip+rd+gd*2+u+tulip)*(reversePoch?-1:1),cc=reversePoch?[0,0,0]:dd.slice(),m=q=>(G.dbl[w]?2:1)*(G.fev[w]>=2?2:1);
+ const hb=(G.honba||0)*1000,hbOn=mo?!!first:true,hv=hbOn?hb:0;const chg=[0,0,0],ch=(ip+rd+gd*2+u+tulip)*(reversePoch?-1:1),cc=reversePoch?[0,0,0]:dd.slice(),m=q=>chipMul(w);
  if(ron){const v=cl100(b*(dl?6:4))+hv;chg[w]+=v;chg[from]-=v;cc[w]+=ch*m(from);cc[from]-=ch*m(from)}
- else for(let q=0;q<3;q++)if(q!=w){const v=cl100(b*(dl||q==G.dealer?2:1))+hv;if(reversePoch){chg[w]-=v;chg[q]+=v;/* 逆ポッチツモ：祝儀・チューリップ・サイコロチャンスを合算し、折半せず各他家が全額支払う。サイコロ分はDICE_DELTAの各他家負担額を加算し、二重計上しない。 */const each=(Math.abs(ch)+Math.abs(dd[q]))*m(q);cc[w]-=each;cc[q]+=each}else{chg[w]+=v;chg[q]-=v;cc[w]+=ch*m(q);cc[q]-=ch*m(q)}}
+ else for(let q=0;q<3;q++)if(q!=w){const v=cl100(b*(dl||q==G.dealer?2:1))+hv;if(reversePoch){chg[w]-=v;chg[q]+=v;/* 逆ポッチツモ：祝儀・チューリップ・サイコロチャンスを合算し、折半せず各他家が全額支払う。サイコロ分はDICE_DELTAの各他家負担額を加算し、二重計上しない。 */const each=Math.abs(ch)*m(q)+Math.abs(dd[q]);cc[w]-=each;cc[q]+=each}else{chg[w]+=v;chg[q]-=v;cc[w]+=ch*m(q);cc[q]-=ch*m(q)}}
  if(reversePoch)chg[w]-=G.pot;else chg[w]+=G.pot;G.pot=0;chg.forEach((v,i)=>{G.pts[i]+=v;G.chips[i]+=cc[i]});
  const kind=han>=13?'役満':han>=11?'三倍満':han>=8?'倍満':han>=6?'跳満':b>=2000?'満貫':'';
  const rows=[];if(ri)rows.push(['立直',1]);if(ip)rows.push(['一発',1]);if(tm)rows.push(['門前清自摸和',1]);
@@ -1322,16 +1419,16 @@ function win2_(w,from,t,mo,first,dw){
  const tulipMsg=tulipLog.length?`<br>🌷チューリップ${ud?'上下山':''}めくり:${tiles(tulipLog)}${tulip?` → 的中${tulip}枚！チップ${reversePoch?'-':'+'}${tulip}`:' → ハズレ'}`:'';
  const deferTulip=!!(G.opt.rep&&G.fev[w]&&!mo);
  const shownTulipMsg=deferTulip?'':tulipMsg;
- const res=`<b>${nm[w]}の${ron?'ロン('+nm[from]+')':'ツモ'}和了！</b>${reversePoch?' ☠逆ポッチ（点数・チップ支払い）':''} 30符${han}翻 ${kind}${yk.length?' 【'+yk.join('・')+'】'+(yn>1?'×'+yn:''):cnted?' 【数え役満】':''}${G.fev[w]?' 🎰'+(G.fev[w]>=2?'ダブルフィーバーリーチ':''):''}<br>${tiles(h.sort(st))}${kt.length?' 副露:'+tiles(kt):''}<br>裏表示:${tiles(G.ura)}${shownTulipMsg}<br>内訳 ${rows.map(x=>x[0]+(x[1]?x[1]+'翻':'')).join(' ')}<br>チップ${deferTulip?ch-tulip:ch}枚${G.dbl[w]?'(💰祝儀倍適用)':''} ${hv?` ／ 本場+${hv}点`:''} ／ 収支: ${nm.map((n,i)=>n+' '+(chg[i]>0?'+':'')+chg[i]+'('+(cc[i]>0?'+':'')+cc[i]+'枚)').join(' ')}`;
- G.wlog.push(res);snd(yk.length||cnted?'yakuman':'win');if(tulip&&!deferTulip)setTimeout(()=>snd('tulip'),700);
- kifRec({t:'win',p:w,from,ron,tile:wt,winInfo:{han,kind,yaku:yk.slice(),yakuman:yk.length?yn:0,counts:cnted?1:0,ch,chg:chg.slice(),cc:cc.slice(),pts:G.pts.slice(),chips:G.chips.slice(),tulip:tulip,rii:ri,fever:G.fev[w]?1:0,hand:h.slice().sort(st),mel:kt.slice(),ura:G.ura.slice(),rows:rows.slice(),chl:chl.slice(),ind:G.ind.slice(),tulipLog:tulipLog.slice(),tulipFlags:tulipFlags.slice(),tulipHits:tulipHits.slice(),tulipIdx:tulipIdx.slice(),tulipUD:ud,dbl:G.dbl[w]?1:0,hb:hv,wild:pochT!=null?N[wt&31]:'',yn:yk.length?yn:0,cn:cnted?1:0,dice:(G.dmsg||''),diceRuns:(G.diceLog||[]).slice()}});if(G.kifCur)G.kifCur.res=(G.kifCur.res?G.kifCur.res+' ／ ':'')+nm[w]+' '+(ron?'ロン':'ツモ')+' '+(yk.length?'役満':han+'翻')+(kind?' '+kind:'');
- RES={ty:'win',hb:hv,prev:(G.rprev||[]).slice(),w,from,ron,hand:hl,wt:pochT!=null?pochT:wt,wild:pochT!=null?N[wt&31]:'',mel:kt,nk:G.nuki[w],rows,han,yn:yk.length?yn:0,cn:cnted?1:0,kind,chl,dbl:G.dbl[w]?1:0,chg:chg.slice(),cc:cc.slice(),pts:G.pts.slice(),ch:G.chips.slice(),names:nm.slice(),dice:(G.dmsg||''),diceRuns:(G.diceLog||[]).slice(),tulipUD:ud,tulipLog:tulipLog.slice(),tulipFlags:tulipFlags.slice(),tulipHits:tulipHits.slice(),ind:G.ind.slice(),ura:G.ura.slice(),rii:G.rii[w]?1:0};
+ const res=`<b>${nm[w]}の${ron?'ロン('+nm[from]+')':'ツモ'}和了！</b>${reversePoch?' ☠逆ポッチ（点数・チップ支払い）':''} 30符${han}翻 ${kind}${yk.length?' 【'+yk.join('・')+'】'+(yn>1?'×'+yn:''):cnted?' 【数え役満】':''}${G.fev[w]?' 🎰'+(G.fev[w]>=2?'ダブルフィーバーリーチ':''):''}<br>${tiles(h.sort(st))}${kt.length?' 副露:'+tiles(kt):''}<br>裏表示:${tiles(G.ura)}${shownTulipMsg}<br>内訳 ${rows.map(x=>x[0]+(x[1]?x[1]+'翻':'')).join(' ')}<br>チップ${deferTulip?ch-tulip:ch}枚${G.dbl[w]?'(💰祝儀倍×2)':''}${G.fev[w]>=2?'(🎰ダブルフィーバー×2)':''} ${hv?` ／ 本場+${hv}点`:''} ／ 収支: ${nm.map((n,i)=>n+' '+(chg[i]>0?'+':'')+chg[i]+'('+(cc[i]>0?'+':'')+cc[i]+'枚)').join(' ')}`;
+ G.wlog.push(res);{const _rv=yk.some(x=>x!=='リーチのみ'&&x!=='リーチツモのみ')&&mo!=1&&!(G.opt.rep&&G.fev[w]&&!mo);if(!_rv)snd(yk.length||cnted?'yakuman':'win')};if(tulip&&!deferTulip)setTimeout(()=>snd('tulip'),700);
+ kifRec({t:'win',p:w,from,ron,tile:wt,winInfo:{han,kind,yaku:yk.slice(),yakuman:yk.length?yn:0,counts:cnted?1:0,ch,chg:chg.slice(),cc:cc.slice(),pts:G.pts.slice(),chips:G.chips.slice(),tulip:tulip,rii:ri,fever:G.fev[w]?1:0,hand:h.slice().sort(st),mel:kt.slice(),ura:G.ura.slice(),rows:rows.slice(),chl:chl.slice(),ind:G.ind.slice(),tulipLog:tulipLog.slice(),tulipFlags:tulipFlags.slice(),tulipHits:tulipHits.slice(),tulipIdx:tulipIdx.slice(),tulipUD:ud,dbl:G.dbl[w]?1:0,fv2:G.fev[w]>=2?1:0,hb:hv,wild:pochT!=null?N[wt&31]:'',yn:yk.length?yn:0,cn:cnted?1:0,dice:(G.dmsg||''),diceRuns:(G.diceLog||[]).slice()}});if(G.kifCur)G.kifCur.res=(G.kifCur.res?G.kifCur.res+' ／ ':'')+nm[w]+' '+(ron?'ロン':'ツモ')+' '+(yk.length?'役満':han+'翻')+(kind?' '+kind:'');
+ RES={ty:'win',hb:hv,prev:(G.rprev||[]).slice(),w,from,ron,hand:hl,wt:pochT!=null?pochT:wt,wild:pochT!=null?N[wt&31]:'',mel:kt,nk:G.nuki[w],rows,han,yn:yk.length?yn:0,cn:cnted?1:0,kind,chl,dbl:G.dbl[w]?1:0,fv2:G.fev[w]>=2?1:0,chg:chg.slice(),cc:cc.slice(),pts:G.pts.slice(),ch:G.chips.slice(),names:nm.slice(),dice:(G.dmsg||''),diceRuns:(G.diceLog||[]).slice(),tulipUD:ud,tulipLog:tulipLog.slice(),tulipFlags:tulipFlags.slice(),tulipHits:tulipHits.slice(),ind:G.ind.slice(),ura:G.ura.slice(),rii:G.rii[w]?1:0};
  G.chCut=0;if(mo==1)return;
  if(G.opt.rep&&G.fev[w]&&!mo){
   // 「何回でも和了」では、和了時点ではチューリップを確定させず、
   // ①めくって終了／②めくらずフィーバー継続 を選べるようにする。
   G.feverPending={tulip,chg:chg.slice(),cc:cc.slice(),resText:res,ron,from,deal:dl,winEvent:G.kifCur?G.kifCur.ev.length-1:-1, tulipUD:ud, tulipLog:tulipLog.slice(), tulipFlags:tulipFlags.slice(), tulipHits:tulipHits.slice(), tulipIdx:tulipIdx.slice()};
-  const tm=tulip,mul=G.dbl[w]?2:1;
+  const tm=tulip,mul=chipMul(w);
   // いったん計算されたチューリップ分の祝儀を保留扱いにする。
   if(tm){
    if(ron){G.chips[w]-=tm*mul;G.chips[from]+=tm*mul}
@@ -1356,7 +1453,7 @@ function win2_(w,from,t,mo,first,dw){
   return;
  }
  consumeTulipWall(tulipIdx);
- end(G.wlog.join('<hr>'),false,mo==2?dw:dl)}
+ const trueYakuman=yk.filter(x=>!['リーチのみ','リーチツモのみ'].includes(x));end(G.wlog.join('<hr>'),false,mo==2?dw:dl);if(trueYakuman.length) setTimeout(()=>yakumanReveal(trueYakuman,tiles(h.concat(kt).sort(st))),80)}
 function end(text,ryu,dealerWon){if(ryu){snd('ryu');if(G.kifCur&&!G.kifCur.res)G.kifCur.res='流局'}if(ryu&&G.wlog.length)text=G.wlog.join('<hr>')+'<hr>'+text;
  G.stage='done';G.act=-1;
  const pen=[0,0,0];
@@ -1401,8 +1498,8 @@ function end(text,ryu,dealerWon){if(ryu){snd('ryu');if(G.kifCur&&!G.kifCur.res)G
  const over=forceEnd||(!renchan&&isFinal)||busted;
  G.over=over;if(over&&G.kifAll){KIF=G.kifAll;KIFN=G.names.slice()}
  if(ryu){const tp=repFeverOwner>=0?[repFeverOwner]:[0,1,2].filter(p=>waits(G.h[p],p).length>0);
-  if(G.kifCur){G.kifCur.res=G.kifCur.res||'流局';kifRec({t:'ryu',tp:tp.slice(),tpHand:tp.map(p=>G.h[p].slice().sort(st)),tpMel:tp.map(p=>[].concat(...G.kan[p],...G.pon[p].map(ptl))),pen:pen.slice(),pts:G.pts.slice(),chips:G.chips.slice()})}
-  RES={ty:'ryu',pen:pen.slice(),t:text,names:G.names.slice(),pts:G.pts.slice(),ch:G.chips.slice(),tp,tpHand:tp.map(p=>G.h[p].slice().sort(st)),tpMel:tp.map(p=>[].concat(...G.kan[p],...G.pon[p].map(ptl)))}}
+  if(G.kifCur){G.kifCur.res=G.kifCur.res||'流局';kifRec({t:'ryu',tp:tp.slice(),tpHand:tp.map(p=>G.h[p].slice().sort(st)),tpMel:tp.map(p=>[].concat(...G.kan[p].map(k=>k.slice(0,4)),...G.pon[p].map(ptl))),pen:pen.slice(),pts:G.pts.slice(),chips:G.chips.slice()})}
+  RES={ty:'ryu',pen:pen.slice(),t:text,names:G.names.slice(),pts:G.pts.slice(),ch:G.chips.slice(),tp,tpHand:tp.map(p=>G.h[p].slice().sort(st)),tpMel:tp.map(p=>[].concat(...G.kan[p].map(k=>k.slice(0,4)),...G.pon[p].map(ptl)))}}
  let finArr=null;
  if(over){const UMA=(G.opt&&Array.isArray(G.opt.uma)&&G.opt.uma.length===3?G.opt.uma:[15,5,-20]),BASE=40000;
   finArr=G.pts.map((p,i)=>[p,G.names[i],G.chips[i],i]).sort((x,y)=>y[0]-x[0]||x[3]-y[3]);
@@ -1462,7 +1559,7 @@ function diceAnimHtml(r,st){
     return `<div class="chrow ${cls}" style="animation-delay:${d0}ms"><span class="chbowl">${diceHtml}</span><span class="chlabel" style="animation-delay:${d0+480}ms">${att.label}${att.value!=null?(att.value>0?' +':' ')+att.value+'枚':''}</span></div>`;
   }).join('')).join('');
   const td=delay;delay+=quick?0:500;
-  const totalLine=`<div class="chtotal" style="animation-delay:${td}ms">計${run.tot>0?'+':''}${run.tot}枚${run.mul>1?` → 💰祝儀倍 実質${run.real>0?'+':''}${run.real}枚`:''}</div>`;
+  const totalLine=`<div class="chtotal" style="animation-delay:${td}ms">計${run.tot>0?'+':''}${run.tot}枚${run.mul>1?` → ×${run.mul}倍 実質${run.real>0?'+':''}${run.real}枚`:''}</div>`;
   return `<div class="chblock"><div class="chwhy">🎰サイコロチャンス！（${run.why}）</div>${rollsHtml}${totalLine}</div>`;
  }).join('');
  if(dsPlay&&!CHBOWL&&!st){const bk=DSKEY;setTimeout(()=>{if(DSKEY===bk&&!CHHOLD)document.body.classList.remove('chresultwait')},delay+2300)}const hold=CHBOWL&&!st&&CHHOLD;return `<div class="dice${hold?' chhold':''}">${blocks}</div>`}
@@ -1472,9 +1569,9 @@ function feverChoiceEnd(){
  if(w==null)return;
  const pend=G.feverPending||{};
  // めくって終了：保留していたチューリップ分を確定して、この局を終了。
- G.fev[w]=0;G.stage='';G.act=-1;
+ const fmul=chipMul(w);G.fev[w]=0;G.stage='';G.act=-1;
  if(pend.tulip){
-  const mul=G.dbl[w]?2:1;
+  const mul=fmul;
   if(ron){G.chips[w]+=pend.tulip*mul;G.chips[from]-=pend.tulip*mul}
   else for(let q=0;q<3;q++)if(q!=w){G.chips[w]+=pend.tulip*mul;G.chips[q]-=pend.tulip*mul}
  }
@@ -1551,7 +1648,7 @@ function homeFromResult(){
 function winBody(r,last){
  const cls=v=>v>0?'pos':v<0?'neg':'';
  const rowsH=r.rows.map(x=>`<div class="yr"><span>${x[0]}</span><span>${x[1]?x[1]+'翻':'役満'}</span></div>`).join('');
- const chH=r.chl.length?r.chl.map(x=>`<div class="yr"><span>${x[0]}</span><span>${x[1]}枚</span></div>`).join('')+(r.dbl?'<div class="yr"><span>💰祝儀倍</span><span>×2</span></div>':''):'<span style="opacity:.6">なし</span>';
+ const chH=r.chl.length?r.chl.map(x=>`<div class="yr"><span>${x[0]}</span><span>${x[1]}枚</span></div>`).join('')+(r.dbl?'<div class="yr"><span>💰祝儀倍</span><span>×2</span></div>':'')+(r.fv2?'<div class="yr"><span>🎰ダブルフィーバー</span><span>×2</span></div>':''):'<span style="opacity:.6">なし</span>';
  const summ=r.yn?`役満${r.yn>1?' ×'+r.yn:''}`:`${r.han}翻30符${r.kind?' '+r.kind:''}${r.cn?' 数え役満':''}`;
  const tHits=(r.tulipHits||[]).reduce((a,x)=>a+x,0);
  const tulipHtml=(r.tulipLog&&r.tulipLog.length)?`<div class="tulipsec"><b>🌷チューリップめくり${r.tulipUD?'（上下山）':''}</b><div class="tulipflip">${(()=>{const sp=(t,i)=>{const k=t>>5,n=r.tulipHits[i];return `<span class="t ${cl(t)} ${['','rd','gd','pt'][k]} ${r.tulipFlags[i]?'hit':''}" style="animation-delay:${i*350}ms">${tileFace(t)}${n>1?`<u class="tn">+${n}</u>`:''}</span>`};if(!r.tulipUD)return r.tulipLog.map(sp).join('');let o='';for(let i=0;i<r.tulipLog.length;i+=2)o+=`<span class="tpair">${sp(r.tulipLog[i],i)}${i+1<r.tulipLog.length?sp(r.tulipLog[i+1],i+1):''}</span>`;return o})()}</div><div class="sm1" style="animation-delay:${r.tulipLog.length*350+200}ms">${tHits?`的中${tHits}枚！チップ+${tHits}`:'ハズレ'}</div></div>`:'';
@@ -1583,7 +1680,7 @@ const RULES=`<style>.ruleGroups{display:grid;gap:12px;text-align:left}.ruleCard{
 </style><div class="ruleGroups">
 <section class="ruleCard"><h3>🀄 採用役一覧</h3><p><span class="ruleTag">使用牌・ドラ：</span>赤5筒・金5筒・赤5索・金5索入り。ドラ表示牌はオプションで設定。抜きドラは1萬・7萬・北。</p><p><span class="ruleTag">チップ：</span>一発1・赤1・裏1・金2・🌷チューリップ1。</p><p><span class="ruleTag">通常役・鳴き：</span>ポン・暗カン可。役牌・対々和・断幺九・混一色・清一色・小三元（2翻）など、リーチなしでも役があれば和了可。</p><p><span class="ruleTag">役満：</span>リーチのみ・リーチツモのみは役満（他の役・一発・嶺上・ドラ・抜きドラ・赤・金・裏ドラが付かない場合。抜きドラ牌（1萬・7萬・北）を河に捨てていたら無効）。本役満は国士無双（7萬が9萬の代わり）・大三元・大四喜・小四喜・字一色・緑一色・清老頭・九蓮宝燈・四暗刻・四槓子・天和・地和・人和。複合は加算、大四喜はダブル。</p><p><span class="ruleTag">特殊牌：</span>1萬は手牌に持ったままだと国士無双以外では和了不可。北は国士無双・小四喜・大四喜のみ可。他家が1萬・7萬・北を抜いた時点でもロン可（国士・小四喜・大四喜の待ちや、手牌の7萬を使う待ち）。門前ツモのみでも和了可。</p><p><span class="ruleTag">逆ポッチ（オプション）：</span>白ポッチ（正規ポッチ）を2枚使用し、通常の白牌4枚とは別に扱う。逆ポッチオプションON時は☠ドクロマークの逆ポッチをさらに2枚追加。リーチ後にツモると、点数・通常チップ・チューリップ分などの支払いがすべて逆転し、和了者が支払う。サイコロチャンス複合時もヒフミとションベン以外は支払い。サイコロチャンスでは逆ポッチ時、目なしは+10枚、ヒフミは+50枚、ションベンは+100枚、それ以外の目はすべてマイナスになる。</p><p><span class="ruleTag">フリテン・流局：</span>見逃し後フリテン（同巡内。リーチ後は永続）。本場は1本場1000点（ロン1000点・ツモ各1000点）。流局ノーテン罰符は場に2000点。流し満貫はダブル役満扱い（河が么九牌・字牌のみ、鳴きなし。抜きドラの1萬・7萬・北を河に捨てた場合は無効）。ダブロンあり（本場・供託は先着のみ）。</p></section>
 <section class="ruleCard"><h3>💰 祝儀倍リーチ</h3><p>半荘に1回使用可能。宣言者が和了すると、獲得するチップが倍になる。</p><p>サイコロチャンスで獲得するチップも倍になる。フィーバーリーチと同時に成立させることも可能。</p></section>
-<section class="ruleCard"><h3>🎰 フィーバーリーチ</h3><p>7萬・7筒・7索のいずれかの確定暗刻（暗槓含む）がある状態でリーチすると発動。その3枚を抜いても待ちが変わらない、つまり待ちに絡まない暗刻が条件。</p><p>成立後は他家が打牌を選べず、強制ツモ切り（ポン・ロンも不可）。宣言者本人のみ通常どおりプレイできる。</p><p>祝儀倍リーチとも複合可。同時に成立できる。</p></section>
+<section class="ruleCard"><h3>🎰 フィーバーリーチ</h3><p>7萬・7筒・7索のいずれかの確定暗刻（暗槓含む）がある状態でリーチすると発動。その3枚を抜いても待ちが変わらない、つまり待ちに絡まない暗刻が条件。</p><p>成立後は他家が打牌を選べず、強制ツモ切り（ポン・ロンも不可）。宣言者本人のみ通常どおりプレイできる。</p><p>祝儀倍リーチとも複合可。同時に成立できる。</p><p>ダブルフィーバー：フィーバー対象の暗刻（槓）が2種類成立した状態。点数が2倍、獲得チップ（サイコロチャンス・チューリップ含む全て）も2倍。祝儀倍リーチと重なると掛け算で4倍。逆ポッチの場合は支払いの向きが逆になる。</p></section>
 <section class="ruleCard"><h3>🎲 サイコロチャンス（チンチロ）</h3><p><span class="ruleTag">方式：</span>サイコロ3個を使ったチンチロ。獲得・支払いはすべてチップ。</p><p>次の場合に発生：</p><ul><li>フィーバーリーチで和了：1回</li><li>門前で赤5筒・金5筒・赤5索・金5索をすべて揃えて和了：1回</li><li>リーチ後に白ポッチ（白2枚）をツモ：1回</li><li>数え役満：1回</li><li>本役満：2回</li></ul><p><span class="ruleTag">チンチロの役・獲得枚数：</span></p><ul><li>ピンゾロ（1・1・1）：+100枚</li><li>アラシ（同じ目3個・ピンゾロ以外）：+50枚</li><li>シゴロ（4・5・6）：+70枚</li><li>目（同じ目2個＋残り1個）：残りの目×10枚</li><li>ヒフミ（1・2・3）：-50枚</li><li>目なし：-10枚</li><li>目なしが出た場合、3回目までは振り直し。3回目も目なしなら-10枚</li><li>ションベン：-100枚（特殊なハズレ。通常の役判定とは別に発生）</li><li>逆ポッチ時：目なし+10枚・ヒフミ+50枚・ションベン+100枚。それ以外（通常の目・アラシ・シゴロ・ピンゾロ）はすべてマイナス</li></ul><p>ピンゾロ・アラシはもう一度振り、そこで出た結果も加算。ションベンを含め、表示された結果をそのままチップ収支に反映する。</p><p>フィーバーリーチ成立後に白ポッチをツモすると複合して2回。祝儀倍リーチ成立時は獲得チップも倍。</p><p>ロン和了時の支払いは放銃者のみ。ツモ時は2人がそれぞれ全額を支払う。</p></section>
 <section class="ruleCard"><h3>🌷 チューリップ</h3><p>リーチして和了した時、次にツモるはずだった上山から1枚ずつめくる。的中している限り連続でめくり、ハズレた時点で終了。</p><p>1枚めくるごとに、手牌の中でその牌が対象となる牌の枚数分チップ獲得。例：手牌に4筒・5筒・6筒があり5筒がめくれたら、3枚すべてが対象なので3枚獲得。</p><p>山が長く残っているほど連続のチャンスが増えるため、早上がりが有利。</p><p><span class="ruleTag">対象牌：</span>筒子・索子は数字±1（同色、1と9は輪になり1の隣は9と2、9の隣は8と1）。萬子は1萬・7萬どちらでも対象。三元牌は白・發・中どれでも対象。風牌は東⇔南⇔西⇔北⇔東の輪で隣が対象。</p><p>手牌だけでなく、抜きドラ（抜いた1萬・7萬・北）も対象に含む。</p><p><span class="ruleTag">オプション：</span>「チューリップを上下山判定にする」を有効にすると、奇数牌の暗刻があるとき上下どちらか的中で継続、両方ハズレで終了。</p></section>
 </div>`;
@@ -1834,11 +1931,11 @@ function kifResultHtml(e,wi){
  };
  const cls=v=>v>0?'pos':v<0?'neg':'';
  const rowsH=r.rows.map(x=>`<div class="yr"><span>${x[0]}</span><span>${x[1]?x[1]+'翻':'役満'}</span></div>`).join('');
- const chH=r.chl.length?r.chl.map(x=>`<div class="yr"><span>${x[0]}</span><span>${x[1]}枚</span></div>`).join('')+(r.dbl?'<div class="yr"><span>💰祝儀倍</span><span>×2</span></div>':''):'<span style="opacity:.6">なし</span>';
+ const chH=r.chl.length?r.chl.map(x=>`<div class="yr"><span>${x[0]}</span><span>${x[1]}枚</span></div>`).join('')+(r.dbl?'<div class="yr"><span>💰祝儀倍</span><span>×2</span></div>':'')+(r.fv2?'<div class="yr"><span>🎰ダブルフィーバー</span><span>×2</span></div>':''):'<span style="opacity:.6">なし</span>';
  const summ=r.yn?`役満${r.yn>1?' ×'+r.yn:''}`:`${r.han}翻30符${r.kind?' '+r.kind:''}${r.cn?' 数え役満':''}`;
  const tHits=(r.tulipHits||[]).reduce((a,x)=>a+x,0);
  const tulipHtml=(r.tulipLog&&r.tulipLog.length)?`<div class="tulipsec"><b>🌷チューリップめくり${r.tulipUD?'（上下山）':''}</b><div class="tulipflip">${(()=>{const sp=(t,i)=>{const k=t>>5,n=r.tulipHits[i]||0;return `<span class="t ${cl(t)} ${['','rd','gd','pt'][k]} ${r.tulipFlags[i]?'hit':''}">${tileFace(t)}${n>1?`<u class="tn">+${n}</u>`:''}</span>`};if(!r.tulipUD)return r.tulipLog.map(sp).join('');let o='';for(let i=0;i<r.tulipLog.length;i+=2)o+=`<span class="tpair">${sp(r.tulipLog[i],i)}${i+1<r.tulipLog.length?sp(r.tulipLog[i+1],i+1):''}</span>`;return o})()}</div><div class="sm1">${tHits?`的中${tHits}枚！チップ+${tHits}`:'ハズレ'}</div></div>`:'';
- const doraHtml=r.ind.length?`<div style="display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;padding:2px 8px;font-size:11px"><span style="display:inline-flex;align-items:center;gap:4px"><b>表ドラ表示</b><span class="mh" style="padding:0">${indicatorTiles(r.ind)}</span></span>${r.rii?`<span style="display:inline-flex;align-items:center;gap:4px"><b>裏ドラ表示</b><span class="mh" style="padding:0">${indicatorTiles(r.ura)}</span></span>`:'<span style="opacity:.6">（リーチなし：裏ドラなし）</span>'}</div>`:'';
+ const doraHtml=r.ind.length?`<div style="display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;padding:2px 8px;font-size:11px"><span style="display:inline-flex;align-items:center;gap:4px"><b>表ドラ表示</b><span class="mh" style="padding:0">${tiles(r.ind)}</span></span>${r.rii?`<span style="display:inline-flex;align-items:center;gap:4px"><b>裏ドラ表示</b><span class="mh" style="padding:0">${tiles(r.ura)}</span></span>`:'<span style="opacity:.6">（リーチなし：裏ドラなし）</span>'}</div>`:'';
  const finalHand=r.hand.slice();
  const winIdx=finalHand.findIndex(t=>t===r.wt || ((t&31)===(r.wt&31)));
  if(winIdx>=0)finalHand.splice(winIdx,1);
@@ -1882,7 +1979,7 @@ function kifDraw(){
  d.innerHTML=`<div class="felt">
  <button class="kropen" onclick="closeKif()">牌譜を閉じる</button>
  <div class="krbar"><button class="g" onclick="kifHand(-1)">◀前局</button><b>📜 ${H.label}　${KV.h+1}/${KIF.length}</b><button class="g" onclick="kifHand(1)">次局▶</button></div>
- <div class="hdr"><span class="nkp">牌譜再生・全員公開</span><span class="nkp">ドラ ${H.ind.map(x=>kt(x)).join('')}</span></div>
+ <div class="hdr"><span class="nkp">牌譜再生・全員公開</span><span class="nkp">ドラ ${H.ind.map(x=>kt(nx(x&31))).join('')}</span></div>
  <div class="table"><div class="sq">
    <div style="font-weight:700;font-size:12px">${H.label}</div><div style="font-size:9px;opacity:.75">牌譜再生</div>${sqRows}<div class="potline">${actTxt}</div>
    <div class="cluster top">${kifReplayRiichiRod(top,e,'top',H,KV.s)}<div class="rvrow">${kifReplayRiver(top,'top',rv,e)}</div></div>
