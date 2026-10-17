@@ -677,6 +677,7 @@ window.addEventListener('touchstart',unlockAudio,{passive:true});
 function togSnd(){SND=!SND;if(SND){snd('tile')}if(G.h)draw()}
 ['pointerdown','pointerup','touchend','click'].forEach(ev=>document.addEventListener(ev,()=>{try{actx();preClips()}catch(e){}if(!VU){VU=1;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.lang='ja-JP';speechSynthesis.speak(u)}catch(e){}}}));
 
+let FX_REMOTE=false;
 let RES=null,G={opt:{rep:false,dora:1}},msg='';let DISCSEL=-1;let V=0,ROLE='solo',RM=null,PEND=false,SEATS={},LASTM=['',''],NICK='',CODE='',DMSG='',TMR=null,DICE_DELTA=null;const st=(a,b)=>(a&31)-(b&31)||a-b;
 const nk=p=>G.kan[p].length+G.pon[p].filter(k=>k.length>4).length;
 const ptl=k=>k.length>4?[k[0],k[1],k[2],k[4]]:k.slice(0,3);
@@ -912,7 +913,7 @@ function render(a){
  ${riiWaitHtml(p0,ok)}<div class="hrow"><div class="hand">${G.h[p0].map((t,i)=>{const last=i==G.last&&G.turn==p0,k2=t>>5,mine=G.stage=='me'&&G.act==p0;const k=(PEND&&!ok.includes(i))||(G.rii[p0]&&!last&&mine)?'dim':(PEND?'ok':'');return `<span class="t ${cl(t)} ${['','rd','gd','pt','pt'][k2]} ${k2==3?'pocchi-normal':k2==4?'pocchi-reverse':''} ${k} ${DISCSEL===i?'sel':''} ${last?'gap':''}" onclick="U('disc',${i})">${tileFace(t)}</span>`}).join('')}</div></div>
  <div class="cm cml">${meldsHtml(pL,'top')}</div><div class="cm cmr">${meldsHtml(pR,'right')}</div><div class="acts"><div class="cm cmo">${meldsHtml(p0)}</div><div class="abtns">${a||''}</div></div><div class="toast" ${log.trim()?'':'style="display:none"'}>${log}</div>${resHtml()}${(()=>{if(!G.callTxt){DFX_KEY='';return ''}if(/^ダブルフィーバー/.test(G.callTxt)){dfxEnsure(G.callTxt);return ''}const cd=G.callSm?650:(G.callBig?5200:0),el=cd&&G.callAt?Date.now()-G.callAt:0;if(cd&&G.callAt&&el>cd)return '';const st=[];if(cd&&G.callAt)st.push('animation-delay:-'+(el/1000).toFixed(2)+'s');if(G.callBig){const n=Array.from(G.callTxt).length;st.push('font-size:min(34vh,160px,calc(86vw/'+n+'))')}const feverTxt=G.callTxt=='フィーバーリーチ';const feverShuTxt=G.callTxt=='フィーバーシュバリーチ！';const shugiTxt=G.callTxt=='祝儀倍リーチ';if(G.callBig&&(feverTxt||feverShuTxt||shugiTxt)){const n=Array.from(G.callTxt).length;st.push('font-size:'+(feverTxt||feverShuTxt?'min(22vh,120px,calc(88vw/'+n+'))':'min(14vh,76px,calc(88vw/'+n+'))'))}const callText=feverShuTxt?'フィーバー\nシュバリーチ':G.callTxt;return `<div class="callfx${G.callSm?' sm':''}${feverTxt?' feverRainbow':''}${feverShuTxt?' feverShuRainbow':''}${shugiTxt?' shugiRed':''}${feverTxt?' feverCut':''}"${st.length?` style="${st.join(';')}"`:''}>${callText}${G.callDub&&G.callTxt==='ロン'?'<span class="callDubTag">ダブロン！</span>':''}</div>`})()}</div>`;
  if(ROLE=='host')bcast()}
-function snap(s){return{pts:G.pts,chips:G.chips,dealer:G.dealer,hn:G.hn,mord:G.mord,callTxt:G.callTxt,callSm:G.callSm,callBig:G.callBig,pot:G.pot,honba:G.honba,riiIdx:G.riiIdx,ind:G.ind,nuki:G.nuki,disc:G.disc,away:G.away,rii:G.rii,dri:G.dri,fev:G.fev,dbl:G.dbl,used:G.used,kan:G.kan,pon:G.pon,turn:G.turn,stage:G.stage,act:G.act,last:G.last,called:G.called,wl:G.wall.length,opt:G.opt,hum:G.hum,names:G.names,over:G.over,h:G.h.map((h,p)=>p==s?h:h.map(()=>0))}}
+function snap(s){return{pts:G.pts,chips:G.chips,dealer:G.dealer,hn:G.hn,mord:G.mord,callTxt:G.callTxt,callSm:G.callSm,callBig:G.callBig,callAt:G.callAt,pot:G.pot,honba:G.honba,riiIdx:G.riiIdx,ind:G.ind,nuki:G.nuki,disc:G.disc,away:G.away,rii:G.rii,dri:G.dri,fev:G.fev,dbl:G.dbl,used:G.used,kan:G.kan,pon:G.pon,turn:G.turn,stage:G.stage,act:G.act,last:G.last,called:G.called,wl:G.wall.length,opt:G.opt,hum:G.hum,names:G.names,over:G.over,h:G.h.map((h,p)=>p==s?h:h.map(()=>0))}}
 const encM=x=>String(x||'').split('<hr>').slice(-2).join('<hr>').replace(/<span class="t [^"]*" data-t="(\d+)"[^>]*>.*?<\/span>/g,'⟦$1⟧');
 const decM=x=>String(x||'').replace(/⟦(\d+)⟧/g,(m,i)=>tiles([+i]));
 function sendBig(topic,obj){if(!RM)return;const j=JSON.stringify(obj);
@@ -1109,7 +1110,7 @@ function dfxEnsure(txt){
  document.body.appendChild(root);
  setTimeout(()=>{if(root.isConnected)root.remove()},5100);
 }
-function yakumanReveal(names,handHtml){
+function yakumanReveal(names,handHtml){if(ROLE=='host'&&RM&&!FX_REMOTE)RM.emit('fx',{type:'yakuman',names:names,handHtml:handHtml}).catch(()=>{});
  const prior=document.querySelector('.yakumanReveal');if(prior)prior.remove();
  const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const rb=(t,c)=>`<div class="rb ${c}"><span class="o1">${t}</span><span class="o2">${t}</span><span class="f">${t}</span></div>`;
@@ -1346,8 +1347,8 @@ function kan(p,t){const h=G.h[p],k=[];for(let i=h.length-1;i>=0;i--)if((h[i]&31)
  msg=`${G.names[p]}がカン（${N[t]}）新ドラ表示`;kifRec({t:'kan',p,tile:t})}
 function smCall(t,v){const k=G.callTok=(G.callTok||0)+1;G.callTxt=t;G.callSm=1;G.callBig=0;G.callAt=Date.now();voice(v);setTimeout(()=>{if(G.callTok==k){G.callTxt='';G.callSm=0}},650)}
 function dsCut(){try{const f=document.querySelector('.felt');if(!f)return;const e=document.createElement('div');e.className='callfx diceJackpot';e.textContent='サイコロチャンス！';f.appendChild(e);setTimeout(()=>e.remove(),1550)}catch(x){}}
-function bigCall(t){const k=G.callTok=(G.callTok||0)+1;G.callTxt=t;G.callSm=0;G.callBig=1;G.callAt=Date.now();const dur=(t=='フィーバーリーチ'||t=='フィーバーシュバリーチ！')?5000:/^ダブルフィーバー/.test(t)?5100:3800;/* 特殊リーチは音声ロック中でも先にカットインを描画する */if(['祝儀倍リーチ','フィーバーリーチ','フィーバーシュバリーチ！','ダブルフィーバーリーチ','ダブルフィーバーシュバリーチ！'].includes(t)){try{render(btns())}catch(e){}}setTimeout(()=>{if(G.callTok==k){G.callTxt='';G.callBig=0;try{render(btns())}catch(e){}}},dur)}
-function callFx(ron,fn){G.stage='wait';G.act=-1;
+function bigCall(t){if(ROLE=='host'&&RM&&!FX_REMOTE)RM.emit('fx',{type:'bigCall',text:String(t)}).catch(()=>{});const k=G.callTok=(G.callTok||0)+1;G.callTxt=t;G.callSm=0;G.callBig=1;G.callAt=Date.now();const dur=(t=='フィーバーリーチ'||t=='フィーバーシュバリーチ！')?5000:/^ダブルフィーバー/.test(t)?5100:3800;/* 特殊リーチは音声ロック中でも先にカットインを描画する */if(['祝儀倍リーチ','フィーバーリーチ','フィーバーシュバリーチ！','ダブルフィーバーリーチ','ダブルフィーバーシュバリーチ！'].includes(t)){try{render(btns())}catch(e){}}setTimeout(()=>{if(G.callTok==k){G.callTxt='';G.callBig=0;try{render(btns())}catch(e){}}},dur)}
+function callFx(ron,fn){G.stage='wait';G.act=-1;if(ROLE=='host'&&RM&&!FX_REMOTE)RM.emit('fx',{type:'callFx',ron:!!ron}).catch(()=>{});
  setTimeout(()=>{document.body.classList.add('wintransition');G.callSm=0;G.callBig=0;G.callTxt=ron?'ロン':'ツモ';voice(ron?'ロン！':'ツモ！');render('');
   setTimeout(()=>{G.callTxt='';G.callDub=false;fn()},1500)},1000)}
 function wildScore(w,h,X){const c=cnt(h),kt=[].concat(...G.kan[w].map(k=>k.slice(0,4)),...G.pon[w].map(ptl)),cf=cnt(h.concat(kt)),L=h.concat(kt);
@@ -1512,13 +1513,13 @@ function end(text,ryu,dealerWon){if(ryu){snd('ryu');if(G.kifCur&&!G.kifCur.res)G
  if(over){const r=G.pts.map((p,i)=>[p,G.names[i],G.chips[i]]).sort((x,y)=>y[0]-x[0]);
   text+=`<hr>終局！ ${r.map((x,i)=>`${i+1}位 ${x[1]} ${x[0]}点(🪙${x[2]})`).join(' / ')}`;
   }else if(forceEnd){text+='<hr>親がトップのためオーラスで終了'}
- msg=text;render('')}
+ msg=text;render('');if(ROLE=='host'&&RM)bcast()}
 function contRes(){
  if(ROLE=='guest')return;
  RIVV=false;
  if(RES&&RES.cont){
   const f=RES.cont;RES=null;DSKEY='';
-  return f();
+  f();if(ROLE=='host'&&RM)bcast();return;
  }
  RES=null;DSKEY='';
  if(G.over){
@@ -1537,6 +1538,7 @@ function contRes(){
  }else{
   newHand();
  }
+ if(ROLE=='host'&&RM)bcast();
 }
 const fmtN=(v,u)=>(v>0?'+':'')+v.toLocaleString()+(u||'');
 var DSKEY='',RIVV=false,AWT=0,AUTOWIN=(()=>{try{return localStorage.getItem('autowin')=='1'}catch(e){return false}})(),NOPON=false;
@@ -1814,6 +1816,17 @@ function lobby(){
  if(ROLE=='host')RM.emit('lobby',{}).catch(()=>{});
  $('app').innerHTML=`<div class="felt menu"><h2 style="margin:0">🎰 部屋 ${CODE}</h2><div class="g2"><div>${ROLE=='host'?`<p>現在のオプション設定を使用します。</p><button onclick="startGame('host')">この面子で対局開始（空席はCPU）</button><br><button class="g" onclick="optionsScreen()">オプションを変更</button>`:chbHtml()+'ホストの開始を待っています…'}</div><div><div id="lobbyList">${listHtml()}</div><br><button class="g khb" onclick="openKifList()">📜 牌譜履歴(${KHIST.length}/5)</button> <button class="g" onclick="leaveRoom()">退出</button></div></div></div>`}
 function leaveRoom(){try{RM&&RM.leave()}catch(e){}RM=null;ROLE='solo';SEATS={};if(TMR){clearInterval(TMR);TMR=null}G={opt:G.opt};V=0;menu()}
+function playRemoteCallFx(ron){
+ document.body.classList.remove('wintransition');
+ G.callSm=0;G.callBig=0;G.callTxt='';
+ setTimeout(()=>{
+  document.body.classList.add('wintransition');
+  G.callSm=0;G.callBig=0;G.callTxt=ron?'ロン':'ツモ';
+  try{voice(ron?'ロン！':'ツモ！')}catch(e){}
+  render('');
+  setTimeout(()=>{G.callTxt='';G.callDub=false;render('')},1500);
+ },1000);
+}
 async function goOnline(role){
  NICK=clean($('nick').value)||'名無し';CODE=($('code').value||'1234').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,10)||'1234';
  const say=t=>{$('onmsg').textContent=t};
@@ -1828,6 +1841,16 @@ async function goOnline(role){
   RM.on('need',m=>{if(G.h){const peerId=m&&m.peer,s=SEATS[peerId];if(s!=null&&G.hum&&G.hum[s]===0){G.hum[s]=1;G.names[s]=String(G.names[s]||'').replace(/\(CPU\)$/,'')}RM.emit('seat',{map:SEATS}).catch(()=>{});LASTM=['',''];bcast()}});
    TMR=setInterval(()=>{if(G.h&&Object.keys(SEATS).length)RM.emit('seat',{map:SEATS}).catch(()=>{});LASTM=['',''];bcast()},3000)}
  else{
+  RM.on('fx',m=>{
+   const d=m&&m.data||{};
+   if(d.type==='callFx'){playRemoteCallFx(!!d.ron);return}
+   if(d.type==='bigCall'&&typeof d.text==='string'){
+    FX_REMOTE=true;try{bigCall(d.text)}finally{FX_REMOTE=false}return
+   }
+   if(d.type==='yakuman'&&Array.isArray(d.names)&&typeof d.handHtml==='string'){
+    FX_REMOTE=true;try{yakumanReveal(d.names,d.handHtml)}finally{FX_REMOTE=false}
+   }
+  });
   RM.on('seat',m=>{const mp=m.data&&m.data.map,id=RM.myId();if(mp&&mp[id]!=null){if(V!=mp[id]){KIF=null;V=mp[id]}if(!G.h)RM.emit('need',{}).catch(()=>{})}});
   [1,2].forEach(s=>{onBig(RM,'st'+s,m=>{if(ROLE=='guest'&&V==s&&m.data)gApply(m.data)});onBig(RM,'r'+s,m=>{if(V==s&&m.data){RES=m.data.r||null;if(G.h)draw()}});onBig(RM,'m'+s,m=>{if(V==s&&m.data){msg=decM(m.data.m);DMSG=decM(m.data.d);if(G.h){G.dmsg=DMSG;draw()}}})});
   onBig(RM,'kif',m=>{const k=kifSan(m.data);if(!k)return;khAdd(k);KIF=k.hands;KIFN=k.names.slice();KIFME=k.me;if(G.h)draw();else if($('kiflist')&&$('kiflist').style.display=='block')kifListDraw()});
