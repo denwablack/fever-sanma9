@@ -1732,33 +1732,67 @@ function mkRoom(role,rid){return new Promise((resolve,reject)=>{
   myId:()=>myId(),
   prune:()=>{try{R._prune&&R._prune()}catch(e){}},
   leave(){closed=true;if(hb){clearInterval(hb);hb=null}try{peer.destroy()}catch(e){}return Promise.resolve()}};
- peer=role=='host'?new Peer(rid,PCFG):new Peer(PCFG);
+ // ゲストIDをブラウザ内に保存。ホームに戻って同じ部屋番号で入り直しても同じ席に紐づける。
+ let savedGuestId='';
+ if(role!='host'){
+  try{
+   const key='sanmafever-peer-id-'+rid;
+   savedGuestId=localStorage.getItem(key)||'';
+   if(!/^sfguest-[a-z0-9]{12,24}$/.test(savedGuestId)){
+    savedGuestId='sfguest-'+Math.random().toString(36).slice(2,14)+Math.random().toString(36).slice(2,6);
+    localStorage.setItem(key,savedGuestId);
+   }
+  }catch(e){}
+ }
+ peer=role=='host'?new Peer(rid,PCFG):(savedGuestId?new Peer(savedGuestId,PCFG):new Peer(PCFG));
  peer.on('error',e=>{if(!done){fail(e.type=='unavailable-id'?'その部屋名はすでに使われています（別の部屋名にしてください）':e.type=='peer-unavailable'?'部屋が見つかりません（ホストが部屋を作っているか確認してください）':'接続エラー：'+e.type)}});
  peer.on('disconnected',()=>{if(!closed&&role=='host'){try{peer.reconnect()}catch(e){}}});
  if(role=='host'){
   peer.on('open',()=>{if(done)return;done=true;clearTimeout(to);resolve(R)});
   peer.on('connection',c=>{
-   const gone=()=>{const g=G2[c.peer];if(!g||g.conn!==c)return;delete G2[c.peer];sendAll(rosterMsg());fireP([],[entry(c.peer,g.p)])};
-   const dead=g=>{if(!g.conn||!g.conn.open)return true;try{const st=g.conn.peerConnection&&g.conn.peerConnection.iceConnectionState;if(st=='failed'||st=='closed')return true}catch(e){}return Date.now()-g.seen>20000};
+   const gone=()=>{const g=G2[c.peer];if(!g||g.conn!==c)return;
+    // 一時切断では席を即時解放せず、同じPeer IDでの復帰を5分待つ。
+    g.disconnectedAt=Date.now();g.conn=null;sendAll(rosterMsg());
+    setTimeout(()=>{const cur=G2[c.peer];if(cur===g&&cur.disconnectedAt&&Date.now()-cur.disconnectedAt>=300000){delete G2[c.peer];sendAll(rosterMsg());fireP([],[entry(c.peer,g.p)])}},305000)};
+   const dead=g=>{if(!g.conn)return !!(g.disconnectedAt&&Date.now()-g.disconnectedAt>300000);if(!g.conn.open)return true;try{const st=g.conn.peerConnection&&g.conn.peerConnection.iceConnectionState;if(st=='failed'||st=='closed')return true}catch(e){}return Date.now()-g.seen>20000};
     const prune=R._prune=()=>{let ch=false;for(const id of Object.keys(G2)){const g=G2[id];if(dead(g)){delete G2[id];try{g.conn.close()}catch(e){}fireP([],[entry(id,g.p)]);ch=true}}if(ch)sendAll(rosterMsg())};
-    c.on('open',()=>{prune();if(Object.keys(G2).length>=2){try{c.send({k:'full'})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400);return}G2[c.peer]={conn:c,p:{},seen:Date.now()}});
+    c.on('open',()=>{prune();const old=G2[c.peer];
+    if(old){old.conn=c;old.seen=Date.now();old.disconnectedAt=0}
+    else {if(Object.keys(G2).length>=2){try{c.send({k:'full'})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400);return}G2[c.peer]={conn:c,p:{},seen:Date.now()}}
+    sendAll(rosterMsg());fireP(old?[]:[entry(c.peer,G2[c.peer].p)],[])});
    c.on('data',o=>{if(!o||typeof o!='object')return;const g=G2[c.peer];if(!g||g.conn!==c)return;g.seen=Date.now();
     if(o.k=='h')return;if(o.k=='p'){const was=Object.keys(g.p).length>0;g.p=(o.p&&typeof o.p=='object')?o.p:{};sendAll(rosterMsg());fireP(was?[]:[entry(c.peer,g.p)],[])}
     else if(o.k=='e'&&typeof o.t=='string')fire(o.t,{data:o.d,peer:c.peer,topic:o.t,isMe:false})});
    c.on('close',gone);c.on('error',gone)});
  }else{
   peer.on('open',()=>{
-   hostConn=peer.connect(rid,{reliable:true,serialization:'json'});
-   hostConn.on('open',()=>{hb=setInterval(()=>{try{if(hostConn.open)hostConn.send({k:'h'})}catch(e){}},4000);if(!done){done=true;clearTimeout(to);resolve(R)}});
-   hostConn.on('data',o=>{if(!o||typeof o!='object')return;
+   let retryTimer=null,connecting=false;
+   const connectHost=()=>{
+    if(closed||connecting)return;connecting=true;
+    try{hostConn=peer.connect(rid,{reliable:true,serialization:'json'})}catch(e){connecting=false;scheduleRetry();return}
+    const conn=hostConn;
+    conn.on('open',()=>{connecting=false;if(retryTimer){clearTimeout(retryTimer);retryTimer=null}
+     if(hb)clearInterval(hb);hb=setInterval(()=>{try{if(hostConn&&hostConn.open)hostConn.send({k:'h'})}catch(e){}},4000);
+     if(!done){done=true;clearTimeout(to);resolve(R)}
+     else {try{conn.send({k:'p',p:pres});conn.send({k:'e',t:'need',d:{}})}catch(e){}}
+    });
+    conn.on('data',o=>{if(!o||typeof o!='object')return;
     if(o.k=='full'){closed=true;if(R.onClose)R.onClose('この部屋は満員です（最大3人）');return}
     if(o.k=='r'&&Array.isArray(o.list)){const old=roster;roster=o.list;
      const oi=old.map(x=>x.peer),ni=roster.map(x=>x.peer);
      fireP(roster.filter(x=>!oi.includes(x.peer)).map(x=>entry(x.peer,x.presence,x.peer==myId())),old.filter(x=>!ni.includes(x.peer)).map(x=>entry(x.peer,x.presence)))}
     else if(o.k=='e'&&typeof o.t=='string')fire(o.t,{data:o.d,peer:rid,topic:o.t,isMe:false})});
-   const lost=()=>{if(hb){clearInterval(hb);hb=null}if(closed)return;closed=true;if(R.onClose)R.onClose('ホストとの接続が切れました')};
-   hostConn.on('close',lost);hostConn.on('error',lost)});
- }})}
+    const lost=()=>{if(hostConn!==conn)return;if(hb){clearInterval(hb);hb=null}connecting=false;if(closed)return;scheduleRetry()};
+    conn.on('close',lost);conn.on('error',lost)
+   };
+   const scheduleRetry=()=>{if(closed||retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;
+     if(peer&&peer.disconnected){try{peer.reconnect()}catch(e){}}
+     connectHost();
+    },1800)};
+   connectHost();
+  });
+ }});
+}
 function listHtml(){if(!RM)return'';return '参加者：'+RM.peers().filter(p=>p.presence&&p.presence.role).map(p=>clean(p.presence.nick)+(p.presence.role=='host'?'（ホスト）':'')+(p.isMe?'★':'')).join('、')}
 function lobby(){
  if(ROLE=='host')RM.emit('lobby',{}).catch(()=>{});
@@ -1775,7 +1809,7 @@ async function goOnline(role){
   if(ROLE=='host'){ch.left.forEach(p=>{const s=SEATS[p.peer];if(s!=null&&G.hum&&G.hum[s])takeover(s)});if(ch.joined.length)LASTM=['','']}});
  if(role=='host'){
   RM.on('act',m=>{if(ROLE!='host'||!G.h)return;const s=SEATS[m.peer],d=m.data||{};if(s==null||typeof d.a!='string')return;if((d.a=='feverEnd'||d.a=='feverContinue')&&s==G.feverChoiceW){if(d.a=='feverEnd')feverChoiceEnd();else feverChoiceContinue();return}act(s,d.a,d.x,d.p)});
-  RM.on('need',()=>{if(G.h){RM.emit('seat',{map:SEATS}).catch(()=>{});LASTM=['',''];bcast()}});
+  RM.on('need',m=>{if(G.h){const peerId=m&&m.peer,s=SEATS[peerId];if(s!=null&&G.hum&&G.hum[s]===0){G.hum[s]=1;G.names[s]=String(G.names[s]||'').replace(/\(CPU\)$/,'')}RM.emit('seat',{map:SEATS}).catch(()=>{});LASTM=['',''];bcast()}});
    TMR=setInterval(()=>{if(G.h&&Object.keys(SEATS).length)RM.emit('seat',{map:SEATS}).catch(()=>{});LASTM=['',''];bcast()},3000)}
  else{
   RM.on('seat',m=>{const mp=m.data&&m.data.map,id=RM.myId();if(mp&&mp[id]!=null){if(V!=mp[id]){KIF=null;V=mp[id]}if(!G.h)RM.emit('need',{}).catch(()=>{})}});
