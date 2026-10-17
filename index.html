@@ -929,7 +929,14 @@ function bcast(){if(!RM||ROLE!='host'||!G.h)return;
  for(const s of Object.values(SEATS)){if(!G.hum[s])continue;sendBig('st'+s,snap(s));
   const m=JSON.stringify({m:encM(msg),d:encM(G.dmsg)});if(m!=LASTM[s]){LASTM[s]=m;sendBig('m'+s,JSON.parse(m))}
   const rj=JSON.stringify({r:RES});if(rj!=LASTM['r'+s]){LASTM['r'+s]=rj;sendBig('r'+s,JSON.parse(rj))}}}
-function gApply(d){G=Object.assign({},d,{wall:new Array(d.wl).fill(0),ura:[],wlog:[],dice:[0,0,0],ipp:[0,0,0],rin:-1,dmsg:DMSG,away:d.away||[[],[],[]]});draw()}
+function gApply(d){
+ // 和了結果はホストが次の局面へ進めるまでゲスト側で保持する。
+ // 結果画面中に定期的な卓状態同期が届いても、河画面へ戻さない。
+ const keepWin=!!(RES&&RES.ty==='win');
+ const advancing=keepWin&&d&&d.stage&&d.stage!=='wait';
+ G=Object.assign({},d,{wall:new Array(d.wl).fill(0),ura:[],wlog:[],dice:[0,0,0],ipp:[0,0,0],rin:-1,dmsg:DMSG,away:d.away||[[],[],[]]});
+ if(advancing){RES=null;RIVV=false;DSKEY='';}
+ draw()}
 const clean=x=>String(x||'').replace(/[^\w\u3040-\u30ff\u4e00-\u9fff]/g,'').slice(0,8);
 const DF='⚀⚁⚂⚃⚄⚅';
 let CHHOLD=false,CHBOWL=false;try{CHBOWL=localStorage.getItem('chbowl')=='1'}catch(e){}
@@ -1752,7 +1759,9 @@ function mkRoom(role,rid){return new Promise((resolve,reject)=>{
  const rosterMsg=()=>({k:'r',list:[{peer:myId(),presence:pres}].concat(Object.keys(G2).map(id=>({peer:id,presence:G2[id].p})))});
  const fail=m=>{if(done)return;done=true;clearTimeout(to);try{peer.destroy()}catch(e){}reject(new Error(m))};
  const to=setTimeout(()=>fail('接続がタイムアウトしました（ネットワークを確認してください）'),15000);
+ const RESUME_SEATS=Object.create(null);
  const R={
+  rememberSeat(id,seat){try{const g=G2[id];const token=g&&g.p&&g.p.resumeToken;if(token&&Number.isInteger(seat))RESUME_SEATS[token]=seat}catch(e){}},
   emit(t,d){const o={k:'e',t:t,d:d};try{if(role=='host')sendAll(o);else if(hostConn&&hostConn.open)hostConn.send(o)}catch(e){}return Promise.resolve()},
   on(t,f){(H[t]=H[t]||[]).push(f);return()=>{H[t]=(H[t]||[]).filter(x=>x!==f)}},
   presence(p){Object.assign(pres,p);if(role!='host'&&resumeToken)pres.resumeToken=resumeToken;try{if(role=='host')sendAll(rosterMsg());else if(hostConn&&hostConn.open)hostConn.send({k:'p',p:pres})}catch(e){}return Promise.resolve()},
@@ -1793,21 +1802,19 @@ function mkRoom(role,rid){return new Promise((resolve,reject)=>{
     return Date.now()-g.seen>20000
    };
     const prune=R._prune=()=>{let ch=false;for(const id of Object.keys(G2)){const g=G2[id];if(dead(g)){delete G2[id];try{g.conn.close()}catch(e){}fireP([],[entry(id,g.p)]);ch=true}}if(ch)sendAll(rosterMsg())};
-    c.on('open',()=>{prune();let old=G2[c.peer];const token=c.metadata&&c.metadata.resumeToken;
-    // PeerJSのIDが変わっても、保存された復帰トークンが一致すれば元の席を引き継ぐ。
+    c.on('open',()=>{prune();let old=G2[c.peer];const token=(c.metadata&&c.metadata.resumeToken)||'';
+    // 保存トークンから席を復元。接続切断から5分以上経って古いPeer情報が消えても、同じ端末なら席を再取得する。
     if(!old&&token){
      const priorId=Object.keys(G2).find(id=>id!==c.peer&&G2[id]&&G2[id].p&&G2[id].p.resumeToken===token&&G2[id].disconnectedAt);
-     if(priorId){
-      old=G2[priorId];
-      if(SEATS&&SEATS[priorId]!=null){SEATS[c.peer]=SEATS[priorId];delete SEATS[priorId]}
-      delete G2[priorId];
-     }
+     if(priorId){old=G2[priorId];if(SEATS&&SEATS[priorId]!=null){SEATS[c.peer]=SEATS[priorId];RESUME_SEATS[token]=SEATS[priorId];delete SEATS[priorId]}delete G2[priorId]}
+     if(SEATS&&RESUME_SEATS[token]!=null){for(const sid of Object.keys(SEATS)){if(sid!==c.peer&&SEATS[sid]===RESUME_SEATS[token])delete SEATS[sid]}SEATS[c.peer]=RESUME_SEATS[token];}
     }
     if(old){old.conn=c;old.seen=Date.now();old.disconnectedAt=0;G2[c.peer]=old}
-    else {if(Object.keys(G2).length>=2){try{c.send({k:'full'})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400);return}G2[c.peer]={conn:c,p:{},seen:Date.now()}}
-    sendAll(rosterMsg());fireP(old?[]:[entry(c.peer,G2[c.peer].p)],[]);if(old&&SEATS&&SEATS[c.peer]!=null)fire('need',{peer:c.peer,data:{},topic:'need',isMe:false})});
+    else {if(Object.keys(G2).length>=2){try{c.send({k:'full'})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400);return}G2[c.peer]={conn:c,p:{resumeToken:token},seen:Date.now()}}
+    if(token&&SEATS&&SEATS[c.peer]!=null)RESUME_SEATS[token]=SEATS[c.peer];
+    sendAll(rosterMsg());fireP(old?[]:[entry(c.peer,G2[c.peer].p)],[]);if(SEATS&&SEATS[c.peer]!=null)fire('need',{peer:c.peer,data:{},topic:'need',isMe:false})});
    c.on('data',o=>{if(!o||typeof o!='object')return;const g=G2[c.peer];if(!g||g.conn!==c)return;g.seen=Date.now();
-    if(o.k=='h')return;if(o.k=='p'){const was=Object.keys(g.p).length>0;g.p=(o.p&&typeof o.p=='object')?o.p:{};sendAll(rosterMsg());fireP(was?[]:[entry(c.peer,g.p)],[])}
+    if(o.k=='h')return;if(o.k=='p'){const was=Object.keys(g.p).length>0;g.p=(o.p&&typeof o.p=='object')?o.p:{};if(g.p.resumeToken&&SEATS&&SEATS[c.peer]!=null)RESUME_SEATS[g.p.resumeToken]=SEATS[c.peer];sendAll(rosterMsg());fireP(was?[]:[entry(c.peer,g.p)],[])}
     else if(o.k=='e'&&typeof o.t=='string')fire(o.t,{data:o.d,peer:c.peer,topic:o.t,isMe:false})});
    c.on('close',gone);c.on('error',gone)});
  }else{
@@ -1862,7 +1869,7 @@ async function goOnline(role){
   RM.on('tableFx',m=>{const d=m&&m.data||m||{};if(typeof d.text==='string')tableFxShow(d.text,!!d.big)});RM.on('fxHold',m=>fxReceive({topic:'fxHold',data:m.data||{}}));
   RM.on('fxRelease',m=>fxReceive({topic:'fxRelease',data:m.data||{}}));
   RM.on('seat',m=>{const mp=m.data&&m.data.map,id=RM.myId();if(mp&&mp[id]!=null){if(V!=mp[id]){KIF=null;V=mp[id]}if(!G.h)RM.emit('need',{}).catch(()=>{})}});
-  [1,2].forEach(s=>{onBig(RM,'st'+s,m=>{if(ROLE=='guest'&&V==s&&m.data)gApply(m.data)});onBig(RM,'r'+s,m=>{if(V==s&&m.data){RES=m.data.r||null;if(G.h)draw()}});onBig(RM,'m'+s,m=>{if(V==s&&m.data){msg=decM(m.data.m);DMSG=decM(m.data.d);if(G.h){G.dmsg=DMSG;draw()}}})});
+  [1,2].forEach(s=>{onBig(RM,'st'+s,m=>{if(ROLE=='guest'&&V==s&&m.data)gApply(m.data)});onBig(RM,'r'+s,m=>{if(V==s&&m.data){const incoming=m.data.r||null;/* ホストから一時的なnull結果が届いても、和了画面は局面進行まで保持 */if(!(RES&&RES.ty==='win'&&!incoming)){RES=incoming;if(!incoming)RIVV=false;}if(G.h)draw()}});onBig(RM,'m'+s,m=>{if(V==s&&m.data){msg=decM(m.data.m);DMSG=decM(m.data.d);if(G.h){G.dmsg=DMSG;draw()}}})});
   onBig(RM,'kif',m=>{const k=kifSan(m.data);if(!k)return;khAdd(k);KIF=k.hands;KIFN=k.names.slice();KIFME=k.me;if(G.h)draw();else if($('kiflist')&&$('kiflist').style.display=='block')kifListDraw()});
    RM.on('lobby',()=>{G={opt:G.opt};V=-1;lobby()})}
  lobby()}
@@ -2125,7 +2132,7 @@ function startGame(mode){
  const o=readOptionForm(),hum=[1,0,0],names=[clean(NICK)||'あなた','CPU-A','CPU-B']; G.opt=o;applyOrientationLayout();
  if(!RM||mode=='solo'){const n=$('nick');if(n)names[0]=clean(n.value)||'あなた';NICK=names[0]}
  SEATS={};V=0;
- if(mode=='host'&&RM){RM.prune();RM.peers().filter(p=>!p.isMe&&p.presence&&p.presence.role=='guest').slice(0,2).forEach((g,i)=>{hum[i+1]=1;names[i+1]=clean(g.presence.nick)||'ゲスト';SEATS[g.peer]=i+1});RM.emit('seat',{map:SEATS}).catch(()=>{});setTimeout(()=>{LASTM=['',''];bcast()},500)}
+ if(mode=='host'&&RM){RM.prune();RM.peers().filter(p=>!p.isMe&&p.presence&&p.presence.role=='guest').slice(0,2).forEach((g,i)=>{hum[i+1]=1;names[i+1]=clean(g.presence.nick)||'ゲスト';SEATS[g.peer]=i+1;if(RM.rememberSeat)RM.rememberSeat(g.peer,i+1)});RM.emit('seat',{map:SEATS}).catch(()=>{});setTimeout(()=>{LASTM=['',''];bcast()},500)}
  G={opt:o,pts:[35000,35000,35000],dealer:0,hn:1,honba:0,pot:0,chips:[0,0,0],used:[0,0,0],hum,names,over:false};newHand()}
 menu();
 </script></body></html>
