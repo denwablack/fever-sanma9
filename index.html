@@ -1760,7 +1760,7 @@ function mkRoom(role,rid){return new Promise((resolve,reject)=>{
  const fireP=(joined,left)=>PCH.slice().forEach(f=>{try{f({peers:R.peers(),joined,left,updated:[]})}catch(e){console.error(e)}});
  const sendAll=o=>{for(const id in G2){try{G2[id].conn&&G2[id].conn.send(o)}catch(e){}}};
  const rosterMsg=()=>({k:'r',list:[{peer:myId(),presence:pres}].concat(Object.keys(G2).filter(live).map(id=>({peer:id,presence:G2[id].p})))});
- const fail=m=>{if(done)return;done=true;clearTimeout(to);try{peer.destroy()}catch(e){}reject(new Error(m))};
+ const fail=m=>{if(done)return;done=true;closed=true;clearTimeout(to);cleanups.splice(0).forEach(f=>{try{f()}catch(e){}});try{peer.destroy()}catch(e){}reject(new Error(m))};
  const to=setTimeout(()=>fail('接続がタイムアウトしました（ネットワークを確認してください）'),15000);
  const RESUME_SEATS=Object.create(null);
  let gErr=null;
@@ -1894,7 +1894,7 @@ function mkRoom(role,rid){return new Promise((resolve,reject)=>{
    if(!conn){scheduleRetry();return}
    connecting=true;hostConn=conn;
    clearTimeout(connTimer);
-   connTimer=setTimeout(()=>{if(hostConn===conn&&!conn.open){try{conn.close()}catch(e){}lost(conn)}},10000);
+   connTimer=setTimeout(()=>{if(hostConn===conn&&!conn.open){try{conn.close()}catch(e){}lost(conn)}},20000);
    conn.on('open',()=>{if(hostConn!==conn)return;connecting=false;clearTimeout(connTimer);fails=0;lastRx=Date.now();
     if(retryTimer){clearTimeout(retryTimer);retryTimer=null}
     if(hb)clearInterval(hb);hb=setInterval(()=>{try{if(connOpen())hostConn.send({k:'h'})}catch(e){}},4000);
