@@ -1754,7 +1754,12 @@ function mkRoom(role,rid){return new Promise((resolve,reject)=>{
     // 一時切断では席を即時解放せず、同じPeer IDでの復帰を5分待つ。
     g.disconnectedAt=Date.now();g.conn=null;sendAll(rosterMsg());
     setTimeout(()=>{const cur=G2[c.peer];if(cur===g&&cur.disconnectedAt&&Date.now()-cur.disconnectedAt>=300000){delete G2[c.peer];sendAll(rosterMsg());fireP([],[entry(c.peer,g.p)])}},305000)};
-   const dead=g=>{if(!g.conn)return !!(g.disconnectedAt&&Date.now()-g.disconnectedAt>300000);if(!g.conn.open)return true;try{const st=g.conn.peerConnection&&g.conn.peerConnection.iceConnectionState;if(st=='failed'||st=='closed')return true}catch(e){}return Date.now()-g.seen>20000};
+   const dead=g=>{
+    if(g.disconnectedAt)return Date.now()-g.disconnectedAt>300000;
+    if(!g.conn||!g.conn.open){g.disconnectedAt=Date.now();g.conn=null;return false}
+    try{const st=g.conn.peerConnection&&g.conn.peerConnection.iceConnectionState;if(st=='failed'||st=='closed'){g.disconnectedAt=Date.now();g.conn=null;return false}}catch(e){}
+    return Date.now()-g.seen>20000
+   };
     const prune=R._prune=()=>{let ch=false;for(const id of Object.keys(G2)){const g=G2[id];if(dead(g)){delete G2[id];try{g.conn.close()}catch(e){}fireP([],[entry(id,g.p)]);ch=true}}if(ch)sendAll(rosterMsg())};
     c.on('open',()=>{prune();const old=G2[c.peer];
     if(old){old.conn=c;old.seen=Date.now();old.disconnectedAt=0}
@@ -1774,7 +1779,8 @@ function mkRoom(role,rid){return new Promise((resolve,reject)=>{
     conn.on('open',()=>{connecting=false;if(retryTimer){clearTimeout(retryTimer);retryTimer=null}
      if(hb)clearInterval(hb);hb=setInterval(()=>{try{if(hostConn&&hostConn.open)hostConn.send({k:'h'})}catch(e){}},4000);
      if(!done){done=true;clearTimeout(to);resolve(R)}
-     else {try{conn.send({k:'p',p:pres});conn.send({k:'e',t:'need',d:{}})}catch(e){}}
+     // 初回接続でも必ず復帰要求を送る。ホームからの再入室時、CPU引継ぎ席を人間に戻す。
+     try{conn.send({k:'p',p:pres});conn.send({k:'e',t:'need',d:{}})}catch(e){}
     });
     conn.on('data',o=>{if(!o||typeof o!='object')return;
     if(o.k=='full'){closed=true;if(R.onClose)R.onClose('この部屋は満員です（最大3人）');return}
