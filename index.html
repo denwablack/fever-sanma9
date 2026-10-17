@@ -1751,27 +1751,35 @@ function menu(){titleScreen()}
 const PCFG={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]},debug:0};
 function mkRoom(role,rid){return new Promise((resolve,reject)=>{
  const H={},PCH=[],pres={},G2={};let hostConn=null,roster=[],closed=false,done=false,peer,hb=null;
+ const cleanups=[];
  const fire=(t,m)=>{(H[t]||[]).slice().forEach(f=>{try{f(m)}catch(e){console.error(e)}})};
  const myId=()=>(peer&&peer.id)||'me';
  const entry=(id,p,me)=>({peer:id,isMe:!!me,sameTab:!!me,kind:'viewer',presence:p||{}});
+ // 切断中（復帰待ち）の人は参加者一覧・名簿には出さない（席は別管理で保持する）
+ const live=id=>{const g=G2[id];return !!(g&&!g.disconnectedAt)};
  const fireP=(joined,left)=>PCH.slice().forEach(f=>{try{f({peers:R.peers(),joined,left,updated:[]})}catch(e){console.error(e)}});
- const sendAll=o=>{for(const id in G2){try{G2[id].conn.send(o)}catch(e){}}};
- const rosterMsg=()=>({k:'r',list:[{peer:myId(),presence:pres}].concat(Object.keys(G2).map(id=>({peer:id,presence:G2[id].p})))});
+ const sendAll=o=>{for(const id in G2){try{G2[id].conn&&G2[id].conn.send(o)}catch(e){}}};
+ const rosterMsg=()=>({k:'r',list:[{peer:myId(),presence:pres}].concat(Object.keys(G2).filter(live).map(id=>({peer:id,presence:G2[id].p})))});
  const fail=m=>{if(done)return;done=true;clearTimeout(to);try{peer.destroy()}catch(e){}reject(new Error(m))};
  const to=setTimeout(()=>fail('接続がタイムアウトしました（ネットワークを確認してください）'),15000);
  const RESUME_SEATS=Object.create(null);
+ let gErr=null;
  const R={
   rememberSeat(id,seat){try{const g=G2[id];const token=g&&g.p&&g.p.resumeToken;if(token&&Number.isInteger(seat))RESUME_SEATS[token]=seat}catch(e){}},
   emit(t,d){const o={k:'e',t:t,d:d};try{if(role=='host')sendAll(o);else if(hostConn&&hostConn.open)hostConn.send(o)}catch(e){}return Promise.resolve()},
   on(t,f){(H[t]=H[t]||[]).push(f);return()=>{H[t]=(H[t]||[]).filter(x=>x!==f)}},
   presence(p){Object.assign(pres,p);if(role!='host'&&resumeToken)pres.resumeToken=resumeToken;try{if(role=='host')sendAll(rosterMsg());else if(hostConn&&hostConn.open)hostConn.send({k:'p',p:pres})}catch(e){}return Promise.resolve()},
-  peers(){if(role=='host')return [entry(myId(),pres,1)].concat(Object.keys(G2).map(id=>entry(id,G2[id].p)));
+  peers(){if(role=='host')return [entry(myId(),pres,1)].concat(Object.keys(G2).filter(live).map(id=>entry(id,G2[id].p)));
    const l=roster.map(x=>entry(x.peer,x.presence,x.peer==myId()));if(!l.some(x=>x.isMe))l.push(entry(myId(),pres,1));return l},
   onPeers(f){PCH.push(f);return()=>{const i=PCH.indexOf(f);if(i>=0)PCH.splice(i,1)}},
   onClose:null,
+  onStatus:null,
   myId:()=>myId(),
   prune:()=>{try{R._prune&&R._prune()}catch(e){}},
-  leave(){closed=true;if(hb){clearInterval(hb);hb=null}try{peer.destroy()}catch(e){}return Promise.resolve()}};
+  leave(){closed=true;if(hb){clearInterval(hb);hb=null}
+   cleanups.splice(0).forEach(f=>{try{f()}catch(e){}});
+   try{const b=document.getElementById('netBanner');if(b)b.remove()}catch(e){}
+   try{peer.destroy()}catch(e){}return Promise.resolve()}};
  // 部屋ごとの復帰トークンを保存。PeerJSの接続ID自体は毎回新規発行し、
  // 同じ端末からの再入室はトークンで同じ席へ戻す。
  let resumeToken='';
@@ -1786,31 +1794,53 @@ function mkRoom(role,rid){return new Promise((resolve,reject)=>{
   }catch(e){}
  }
  peer=role=='host'?new Peer(rid,PCFG):new Peer(PCFG);
- peer.on('error',e=>{if(!done){fail(e.type=='unavailable-id'?'その部屋名はすでに使われています（別の部屋名にしてください）':e.type=='peer-unavailable'?'部屋が見つかりません（ホストが部屋を作っているか確認してください）':'接続エラー：'+e.type)}});
- peer.on('disconnected',()=>{if(!closed&&role=='host'){try{peer.reconnect()}catch(e){}}});
+ peer.on('error',e=>{if(!done){fail(e.type=='unavailable-id'?'その部屋名はすでに使われています（別の部屋名にしてください）':e.type=='peer-unavailable'?'部屋が見つかりません（ホストが部屋を作っているか確認してください）':'接続エラー：'+e.type)}else if(gErr)gErr(e)});
+ peer.on('disconnected',()=>{
+  if(closed||role!='host')return;
+  const tryR=()=>{if(closed||peer.destroyed||!peer.disconnected)return;try{peer.reconnect()}catch(e){}setTimeout(tryR,5000)};
+  tryR()});
  if(role=='host'){
   peer.on('open',()=>{if(done)return;done=true;clearTimeout(to);resolve(R)});
+  const iceBad=c=>{try{const st=c.peerConnection&&c.peerConnection.iceConnectionState;return st=='failed'||st=='closed'}catch(e){return false}};
+  // 切断を検知したら席は保持したまま「切断中」にする。
+  //  ・12秒戻らなければ CPU が代打ち（'away'）。戻ってくれば 'need' で人間に戻る
+  //  ・5分戻らなければ席を完全に解放
+  const markGone=(id,g)=>{
+   if(!g||g.disconnectedAt)return;
+   const c0=g.conn;g.disconnectedAt=Date.now();g.conn=null;
+   try{c0&&c0.close()}catch(e){}
+   sendAll(rosterMsg());fireP([],[]);
+   setTimeout(()=>{if(G2[id]===g&&g.disconnectedAt&&!g.conn)fire('away',{peer:id,data:{},topic:'away',isMe:false})},12000);
+   setTimeout(()=>{if(G2[id]===g&&g.disconnectedAt&&Date.now()-g.disconnectedAt>=300000){delete G2[id];sendAll(rosterMsg());fireP([],[entry(id,g.p)])}},305000)};
+  const prune=R._prune=()=>{let ch=false;
+   for(const id of Object.keys(G2)){const g=G2[id];
+    if(g.disconnectedAt){if(Date.now()-g.disconnectedAt>300000){delete G2[id];fireP([],[entry(id,g.p)]);ch=true}}
+    else if(!g.conn||!g.conn.open||iceBad(g.conn)||Date.now()-(g.seen||0)>20000)markGone(id,g)}
+   if(ch)sendAll(rosterMsg())};
+  // 無音で落ちた接続（close イベントが来ない）も拾えるよう定期的に掃除し、ゲスト側にも生存通知を送る
+  const sw=setInterval(()=>{if(!closed){prune();sendAll({k:'h'})}},4000);
+  cleanups.push(()=>clearInterval(sw));
   peer.on('connection',c=>{
-   const gone=()=>{const g=G2[c.peer];if(!g||g.conn!==c)return;
-    // 一時切断では席を即時解放せず、同じPeer IDでの復帰を5分待つ。
-    g.disconnectedAt=Date.now();g.conn=null;sendAll(rosterMsg());
-    setTimeout(()=>{const cur=G2[c.peer];if(cur===g&&cur.disconnectedAt&&Date.now()-cur.disconnectedAt>=300000){delete G2[c.peer];sendAll(rosterMsg());fireP([],[entry(c.peer,g.p)])}},305000)};
-   const dead=g=>{
-    if(g.disconnectedAt)return Date.now()-g.disconnectedAt>300000;
-    if(!g.conn||!g.conn.open){g.disconnectedAt=Date.now();g.conn=null;return false}
-    try{const st=g.conn.peerConnection&&g.conn.peerConnection.iceConnectionState;if(st=='failed'||st=='closed'){g.disconnectedAt=Date.now();g.conn=null;return false}}catch(e){}
-    return Date.now()-g.seen>20000
-   };
-    const prune=R._prune=()=>{let ch=false;for(const id of Object.keys(G2)){const g=G2[id];if(dead(g)){delete G2[id];try{g.conn.close()}catch(e){}fireP([],[entry(id,g.p)]);ch=true}}if(ch)sendAll(rosterMsg())};
-    c.on('open',()=>{prune();let old=G2[c.peer];const token=(c.metadata&&c.metadata.resumeToken)||'';
-    // 保存トークンから席を復元。接続切断から5分以上経って古いPeer情報が消えても、同じ端末なら席を再取得する。
+   const gone=()=>{const g=G2[c.peer];if(!g||g.conn!==c)return;markGone(c.peer,g)};
+   c.on('open',()=>{prune();const token=(c.metadata&&c.metadata.resumeToken)||'';let old=G2[c.peer];
+    // 保存トークンから席を復元。ページ再読込などで新しいPeer IDになっても、同じ端末なら
+    // 「切断を検知済みか否か」に関係なく元の席・名前へ戻す（検知前に満員扱いされるのを防ぐ）。
     if(!old&&token){
-     const priorId=Object.keys(G2).find(id=>id!==c.peer&&G2[id]&&G2[id].p&&G2[id].p.resumeToken===token&&G2[id].disconnectedAt);
-     if(priorId){old=G2[priorId];if(SEATS&&SEATS[priorId]!=null){SEATS[c.peer]=SEATS[priorId];RESUME_SEATS[token]=SEATS[priorId];delete SEATS[priorId]}delete G2[priorId]}
-     if(SEATS&&RESUME_SEATS[token]!=null){for(const sid of Object.keys(SEATS)){if(sid!==c.peer&&SEATS[sid]===RESUME_SEATS[token])delete SEATS[sid]}SEATS[c.peer]=RESUME_SEATS[token];}
+     const priorId=Object.keys(G2).find(id=>id!==c.peer&&G2[id]&&G2[id].p&&G2[id].p.resumeToken===token);
+     if(priorId){old=G2[priorId];const oc=old.conn;old.conn=null;
+      if(SEATS&&SEATS[priorId]!=null){SEATS[c.peer]=SEATS[priorId];RESUME_SEATS[token]=SEATS[priorId];delete SEATS[priorId]}
+      delete G2[priorId];try{oc&&oc.close()}catch(e){}}
+     if(SEATS&&RESUME_SEATS[token]!=null){for(const sid of Object.keys(SEATS)){if(sid!==c.peer&&SEATS[sid]===RESUME_SEATS[token])delete SEATS[sid]}SEATS[c.peer]=RESUME_SEATS[token]}
     }
-    if(old){old.conn=c;old.seen=Date.now();old.disconnectedAt=0;G2[c.peer]=old}
-    else {if(Object.keys(G2).length>=2){try{c.send({k:'full'})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400);return}G2[c.peer]={conn:c,p:{resumeToken:token},seen:Date.now()}}
+    if(old){const oc=old.conn;old.conn=c;old.seen=Date.now();old.disconnectedAt=0;G2[c.peer]=old;if(oc&&oc!==c){try{oc.close()}catch(e){}}}
+    else{
+     if(Object.keys(G2).length>=2){
+      // 席を持たない切断済みの幽霊エントリは追い出して空きを作る
+      const ghost=Object.keys(G2).find(id=>G2[id].disconnectedAt&&!(SEATS&&SEATS[id]!=null));
+      if(ghost)delete G2[ghost];
+     }
+     if(Object.keys(G2).length>=2){try{c.send({k:'full'})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400);return}
+     G2[c.peer]={conn:c,p:{resumeToken:token},seen:Date.now()}}
     if(token&&SEATS&&SEATS[c.peer]!=null)RESUME_SEATS[token]=SEATS[c.peer];
     sendAll(rosterMsg());fireP(old?[]:[entry(c.peer,G2[c.peer].p)],[]);if(SEATS&&SEATS[c.peer]!=null)fire('need',{peer:c.peer,data:{},topic:'need',isMe:false})});
    c.on('data',o=>{if(!o||typeof o!='object')return;const g=G2[c.peer];if(!g||g.conn!==c)return;g.seen=Date.now();
@@ -1818,33 +1848,80 @@ function mkRoom(role,rid){return new Promise((resolve,reject)=>{
     else if(o.k=='e'&&typeof o.t=='string')fire(o.t,{data:o.d,peer:c.peer,topic:o.t,isMe:false})});
    c.on('close',gone);c.on('error',gone)});
  }else{
-  peer.on('open',()=>{
-   let retryTimer=null,connecting=false;
-   const connectHost=()=>{
-    if(closed||connecting)return;connecting=true;
-    try{hostConn=peer.connect(rid,{reliable:true,serialization:'json',metadata:{resumeToken:resumeToken}})}catch(e){connecting=false;scheduleRetry();return}
-    const conn=hostConn;
-    conn.on('open',()=>{connecting=false;if(retryTimer){clearTimeout(retryTimer);retryTimer=null}
-     if(hb)clearInterval(hb);hb=setInterval(()=>{try{if(hostConn&&hostConn.open)hostConn.send({k:'h'})}catch(e){}},4000);
-     if(!done){done=true;clearTimeout(to);resolve(R)}
-     // 初回接続でも必ず復帰要求を送る。ホームからの再入室時、CPU引継ぎ席を人間に戻す。
-     try{if(resumeToken)pres.resumeToken=resumeToken;conn.send({k:'p',p:pres});conn.send({k:'e',t:'need',d:{}})}catch(e){}
-    });
-    conn.on('data',o=>{if(!o||typeof o!='object')return;
+  // ---- ゲスト側：切断・ホスト不在・シグナリング切断・Peer破棄のどれからでも自動復帰する ----
+  let retryTimer=null,connecting=false,connTimer=null,lastRx=Date.now(),everOpen=false,fails=0,status='ok';
+  const setStatus=s=>{if(s===status)return;status=s;try{R.onStatus&&R.onStatus(s)}catch(e){}};
+  const connOpen=()=>!!(hostConn&&hostConn.open);
+  const scheduleRetry=()=>{
+   if(closed||retryTimer)return;
+   const d=Math.min(1500+fails*700,6000);fails++;
+   retryTimer=setTimeout(()=>{retryTimer=null;if(closed)return;
+    // シグナリングにいつまでも繋がらない場合は Peer を作り直す
+    if(fails%6==5&&peer&&!peer.open&&!peer.disconnected&&!peer.destroyed)rebuild();else connectHost()},d)};
+  const lost=conn=>{
+   if(hostConn!==conn)return;hostConn=null;
+   if(hb){clearInterval(hb);hb=null}
+   connecting=false;clearTimeout(connTimer);
+   if(closed)return;
+   if(everOpen)setStatus('lost');
+   scheduleRetry()};
+  const bind=p=>{
+   p.on('open',()=>{if(p!==peer||closed)return;connectHost()});
+   p.on('disconnected',()=>{if(p!==peer||closed)return;try{p.reconnect()}catch(e){}});
+   p.on('close',()=>{if(p!==peer||closed)return;rebuild()})};
+  // Peer が壊れた／破棄された場合は新しいIDで作り直す。席は復帰トークンでホストが元に戻す。
+  const rebuild=()=>{
+   if(closed)return;
+   const old=peer;connecting=false;clearTimeout(connTimer);hostConn=null;
+   const np=new Peer(PCFG);peer=np;
+   np.on('error',e=>{if(np===peer&&gErr)gErr(e)});
+   bind(np);
+   try{old.destroy()}catch(e){}};
+  gErr=e=>{
+   if(closed)return;
+   connecting=false;clearTimeout(connTimer);
+   if(hostConn&&!hostConn.open){try{hostConn.close()}catch(x){}hostConn=null}
+   if(connOpen())return; // データ接続が生きていればシグナリングの一時エラーは無視
+   if(everOpen)setStatus('lost');
+   if(peer&&peer.destroyed)rebuild();else scheduleRetry()};
+  const connectHost=()=>{
+   if(closed||connecting||connOpen())return;
+   if(!peer||peer.destroyed){rebuild();return}
+   if(peer.disconnected){try{peer.reconnect()}catch(e){}scheduleRetry();return} // 復旧すれば 'open' で再度ここに来る
+   if(!peer.open){scheduleRetry();return}
+   let conn=null;
+   try{conn=peer.connect(rid,{reliable:true,serialization:'json',metadata:{resumeToken:resumeToken}})}catch(e){conn=null}
+   if(!conn){scheduleRetry();return}
+   connecting=true;hostConn=conn;
+   clearTimeout(connTimer);
+   connTimer=setTimeout(()=>{if(hostConn===conn&&!conn.open){try{conn.close()}catch(e){}lost(conn)}},10000);
+   conn.on('open',()=>{if(hostConn!==conn)return;connecting=false;clearTimeout(connTimer);fails=0;lastRx=Date.now();
+    if(retryTimer){clearTimeout(retryTimer);retryTimer=null}
+    if(hb)clearInterval(hb);hb=setInterval(()=>{try{if(connOpen())hostConn.send({k:'h'})}catch(e){}},4000);
+    everOpen=true;
+    if(!done){done=true;clearTimeout(to);resolve(R)}
+    // 初回接続でも必ず復帰要求を送る。ホームからの再入室時、CPU引継ぎ席を人間に戻す。
+    try{if(resumeToken)pres.resumeToken=resumeToken;conn.send({k:'p',p:pres});conn.send({k:'e',t:'need',d:{}})}catch(e){}
+    setStatus('ok')});
+   conn.on('data',o=>{lastRx=Date.now();if(!o||typeof o!='object')return;
+    if(o.k=='h')return;
     if(o.k=='full'){closed=true;if(R.onClose)R.onClose('この部屋は満員です（最大3人）');return}
     if(o.k=='r'&&Array.isArray(o.list)){const old=roster;roster=o.list;
      const oi=old.map(x=>x.peer),ni=roster.map(x=>x.peer);
      fireP(roster.filter(x=>!oi.includes(x.peer)).map(x=>entry(x.peer,x.presence,x.peer==myId())),old.filter(x=>!ni.includes(x.peer)).map(x=>entry(x.peer,x.presence)))}
     else if(o.k=='e'&&typeof o.t=='string')fire(o.t,{data:o.d,peer:rid,topic:o.t,isMe:false})});
-    const lost=()=>{if(hostConn!==conn)return;if(hb){clearInterval(hb);hb=null}connecting=false;if(closed)return;scheduleRetry()};
-    conn.on('close',lost);conn.on('error',lost)
-   };
-   const scheduleRetry=()=>{if(closed||retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;
-     if(peer&&peer.disconnected){try{peer.reconnect()}catch(e){}}
-     connectHost();
-    },1800)};
-   connectHost();
-  });
+   conn.on('close',()=>lost(conn));conn.on('error',()=>lost(conn))};
+  bind(peer);
+  // ホストからの生存通知（4秒ごと）が12秒途絶えたら無音切断とみなして張り直す
+  const wd=setInterval(()=>{if(closed)return;if(connOpen()&&Date.now()-lastRx>12000){const c=hostConn;try{c.close()}catch(e){}lost(c)}},3000);
+  // タブ復帰・ネット復帰時は待たずに即確認／再接続
+  const kick=()=>{if(closed)return;
+   if(connOpen()){lastRx=Math.min(lastRx,Date.now()-6000);try{hostConn.send({k:'h'})}catch(e){}}
+   else{if(retryTimer){clearTimeout(retryTimer);retryTimer=null}connectHost()}};
+  const onVis=()=>{if(!document.hidden)kick()};
+  document.addEventListener('visibilitychange',onVis);window.addEventListener('online',kick);window.addEventListener('pageshow',kick);
+  cleanups.push(()=>{clearInterval(wd);if(retryTimer)clearTimeout(retryTimer);clearTimeout(connTimer);
+   document.removeEventListener('visibilitychange',onVis);window.removeEventListener('online',kick);window.removeEventListener('pageshow',kick)});
  }});
 }
 function listHtml(){if(!RM)return'';return '参加者：'+RM.peers().filter(p=>p.presence&&p.presence.role).map(p=>clean(p.presence.nick)+(p.presence.role=='host'?'（ホスト）':'')+(p.isMe?'★':'')).join('、')}
@@ -1858,10 +1935,13 @@ async function goOnline(role){
  if(!window.Peer){say('通信ライブラリを読み込めませんでした（インターネット接続を確認してください）');return}
  say('接続中…');
  try{RM=await mkRoom(role,'sanmafever-'+CODE)}catch(e){RM=null;say((e&&e.message)||'部屋に入れませんでした');return}
- ROLE=role;RM.onClose=m=>{if(ROLE!='solo'){alert(m||'接続が切れました');leaveRoom()}};RM.presence({role:role,nick:NICK});
+ ROLE=role;RM.onClose=m=>{if(ROLE!='solo'){alert(m||'接続が切れました');leaveRoom()}};
+ RM.onStatus=st=>{let b=document.getElementById('netBanner');if(st=='lost'){if(!b){b=document.createElement('div');b.id='netBanner';b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#b3261e;color:#fff;text-align:center;padding:6px 8px;font:700 14px sans-serif';b.textContent='⚠ ホストとの接続が切れました。再接続中…';document.body.appendChild(b)}}else{if(b)b.remove();PEND=false;DISCSEL=-1;try{if(ROLE=='guest'&&G&&G.h)draw()}catch(e){}}};
+RM.presence({role:role,nick:NICK});
  RM.onPeers(ch=>{if($('lobbyList'))$('lobbyList').innerHTML=listHtml();
   if(ROLE=='host'){ch.left.forEach(p=>{const s=SEATS[p.peer];if(s!=null&&G.hum&&G.hum[s])takeover(s)});if(ch.joined.length)LASTM=['','']}});
  if(role=='host'){
+  RM.on('away',m=>{if(ROLE!='host'||!G.h||!G.hum)return;const s=SEATS[m&&m.peer];if(s!=null&&G.hum[s])takeover(s)});
   RM.on('act',m=>{if(ROLE!='host'||!G.h)return;const s=SEATS[m.peer],d=m.data||{};if(s==null||typeof d.a!='string')return;if((d.a=='feverEnd'||d.a=='feverContinue')&&s==G.feverChoiceW){if(d.a=='feverEnd')feverChoiceEnd();else feverChoiceContinue();return}act(s,d.a,d.x,d.p)});
   RM.on('need',m=>{if(G.h){const peerId=m&&m.peer,s=SEATS[peerId];if(s!=null&&G.hum&&G.hum[s]===0){G.hum[s]=1;G.names[s]=String(G.names[s]||'').replace(/\(CPU\)$/,'')}RM.emit('seat',{map:SEATS}).catch(()=>{});LASTM=['',''];bcast()}});
    TMR=setInterval(()=>{if(G.h&&Object.keys(SEATS).length)RM.emit('seat',{map:SEATS}).catch(()=>{});LASTM=['',''];bcast()},3000)}
