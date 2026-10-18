@@ -1471,7 +1471,7 @@ function win2_(w,from,t,mo,first,dw){
  const reversePoch=!!(!ron&&(G.revPochi===w || (G.rii[w] && wt!=null && (wt>>5)===4)));if(reversePoch)G.revPochi=-1;
  const hb=(G.honba||0)*1000,hbOn=mo?!!first:true,hv=hbOn?hb:0;const chg=[0,0,0],ch=(ip+rd+gd*2+u+tulip)*(reversePoch?-1:1),cc=reversePoch?[0,0,0]:dd.slice(),m=q=>chipMul(w);
  if(ron){const v=cl100(b*(dl?6:4))+hv;chg[w]+=v;chg[from]-=v;cc[w]+=ch*m(from);cc[from]-=ch*m(from)}
- else for(let q=0;q<3;q++)if(q!=w){const v=cl100(b*(dl||q==G.dealer?2:1))+hv;if(reversePoch){chg[w]-=v;chg[q]+=v;/* 逆ポッチツモ：祝儀・チューリップ・サイコロチャンスを合算し、折半せず各他家が全額支払う。サイコロ分はDICE_DELTAの各他家負担額を加算し、二重計上しない。 */const each=Math.abs(ch)*m(q)+Math.abs(dd[q]);cc[w]-=each;cc[q]+=each}else{chg[w]+=v;chg[q]-=v;cc[w]+=ch*m(q);cc[q]-=ch*m(q)}}
+ else for(let q=0;q<3;q++)if(q!=w){const v=cl100(b*(dl||q==G.dealer?2:1))+hv;if(reversePoch){chg[w]-=v;chg[q]+=v;/* 逆ポッチツモ：祝儀・チューリップ(ch、負)とサイコロチャンス(dd、他家の増減)を符号付きで合算する。ヒフミ・目なし・ションベンは和了者の貰い(+)、それ以外は支払い(−)。折半せず各他家との間で全額やり取りし、サイコロ分は二重計上しない。 */const net=ch*m(q)-dd[q];cc[w]+=net;cc[q]-=net}else{chg[w]+=v;chg[q]-=v;cc[w]+=ch*m(q);cc[q]-=ch*m(q)}}
  if(reversePoch)chg[w]-=G.pot;else chg[w]+=G.pot;G.pot=0;chg.forEach((v,i)=>{G.pts[i]+=v;G.chips[i]+=cc[i]});
  const kind=han>=13?'役満':han>=11?'三倍満':han>=8?'倍満':han>=6?'跳満':b>=2000?'満貫':'';
  const rows=[];if(ri)rows.push(['立直',1]);if(ip)rows.push(['一発',1]);if(tm)rows.push(['門前清自摸和',1]);
